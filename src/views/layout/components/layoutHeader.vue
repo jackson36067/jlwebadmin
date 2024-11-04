@@ -3,6 +3,10 @@ import svgIcon from "@/components/svg/svgIcon.vue";
 import { inject, ref, onMounted, onBeforeUnmount } from "vue";
 import avatar from "@/assets/images/avatar.png";
 import router from "@/router";
+import { logoutAPI } from "@/apis/user";
+import { useLoginStore } from "@/stores/LoginStore";
+import { ElMessage, ElMessageBox } from "element-plus";
+
 const isCollapse = inject("isCollapse", ref(false));
 const doCollapse = () => {
   isCollapse.value = !isCollapse.value;
@@ -57,6 +61,34 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("fullscreenchange", onFullscreenChange);
 });
+// 退出登录
+const logout = async () => {
+  ElMessageBox.confirm("你确认要退出吗", "Warning", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      // 发起退出登录请求
+      await logoutAPI();
+      // 清空用户存储
+      const LoginStore = useLoginStore();
+      LoginStore.clearLoginData();
+      // 将页面跳转至登录页
+      router.push("/login");
+      ElMessage({
+        type: "success",
+        message: "退出成功",
+      });
+    })
+    .catch(() => {
+      // 取消修改也要刷新页面
+      ElMessage({
+        type: "error",
+        message: "退出失败",
+      });
+    });
+};
 </script>
 <template>
   <div class="header" :class="{ left: isCollapse }">
@@ -162,7 +194,7 @@ onBeforeUnmount(() => {
             <el-dropdown-menu>
               <el-dropdown-item>布局设置</el-dropdown-item>
               <el-dropdown-item>个人中心</el-dropdown-item>
-              <el-dropdown-item>退出登录</el-dropdown-item>
+              <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>

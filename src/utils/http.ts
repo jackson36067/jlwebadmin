@@ -13,7 +13,6 @@ const captcha = ref("");
 httpInstance.interceptors.request.use(
   (config) => {
     // 发起请求时携带验证码
-    console.log("当前验证码:", captcha.value);
     if (config.headers.code == null) {
       config.headers.Code = captcha.value;
     }

@@ -89,3 +89,10 @@ export const exportUserInfoAPI = () => {
     responseType: "blob", // 设置响应类型为 blob
   });
 };
+
+export const logoutAPI = () => {
+  return httpInstance({
+    method: "post",
+    url: "user/logout",
+  });
+};

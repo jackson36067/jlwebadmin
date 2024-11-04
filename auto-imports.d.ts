@@ -8,4 +8,5 @@ export {}
 declare global {
   const ElIconModules: typeof import('@element-plus/icons-vue')['Modules']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
+  const ElMessageBox: typeof import('element-plus/es')['ElMessageBox']
 }

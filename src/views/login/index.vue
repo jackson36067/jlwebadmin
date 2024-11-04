@@ -22,30 +22,45 @@ const loginRules = {
 // 验证码路径
 const codeUrl = ref("");
 const loginStore = useLoginStore();
+
+// 登录函数
+const login = async () => {
+  const { username, password, code } = loginForm.value;
+  // 发起请求
+  await loginStore.doUserLogin({ username, password, code }).catch((error) => {
+    // 如果登录出现错误刷新验证码
+    getCode();
+    // 清空验证码栏
+    loginForm.value.code = "";
+    return Promise.reject(error);
+  });
+  // 提示登录成功
+  ElMessage({ type: "success", message: "登录成功" });
+  // 登录按钮键显示加载
+  loading.value = true;
+  setTimeout(() => {
+    router.push("/");
+  }, 500);
+};
+
 const doLogin = () => {
-  loginRef.value.validate(async (valid) => {
+  loginRef.value.validate((valid) => {
     if (valid) {
-      const { username, password, code } = loginForm.value;
-      // 发起请求
-      await loginStore
-        .doUserLogin({ username, password, code })
-        .catch((error) => {
-          // 如果登录出现错误刷新验证码
-          getCode();
-          // 清空验证码栏
-          loginForm.value.code = "";
-          return Promise.reject(error);
-        });
-      // 提示登录成功
-      ElMessage({ type: "success", message: "登录成功" });
-      // 登录按钮键显示加载
-      loading.value = true;
-      setTimeout(() => {
-        router.push("/");
-      }, 500);
+      login();
     }
   });
 };
+const handleKeydown = (event) => {
+  loginRef.value.validate((valid) => {
+    if (valid) {
+      if (event.key === "Enter") {
+        login();
+      }
+    }
+  });
+};
+document.addEventListener("keydown", handleKeydown);
+
 // 获取验证码接口
 const getCode = async () => {
   const res = await getCodeAPI();
