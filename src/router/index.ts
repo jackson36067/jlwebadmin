@@ -3,6 +3,7 @@ import LoginView from "@/views/login/index.vue";
 import layout from "@/views/layout/index.vue";
 import homeView from "@/views/home/homeView.vue";
 import usreView from "@/views/user/index.vue";
+import roleView from "@/views/role/index.vue";
 import { useLoginStore } from "@/stores/LoginStore";
 
 const router = createRouter({
@@ -20,6 +21,10 @@ const router = createRouter({
         {
           path: "/user",
           component: usreView,
+        },
+        {
+          path: "/role",
+          component: roleView,
         },
       ],
     },

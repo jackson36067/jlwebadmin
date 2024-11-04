@@ -19,7 +19,7 @@ const doOpacity = () => {
 
 // 跳转至文档
 const toDoc = () => {
-  window.open("https://github.com", "_blank"); // 在新标签页中打开
+  window.open("https://github.com/jackson36067/jlwebadmin", "_blank"); // 在新标签页中打开
 };
 
 // 监测页面宽度大小,一定程度时把去了头像外的图标全部隐藏
