@@ -270,13 +270,13 @@ const refreshUserInfo = () => {
             </el-button>
           </div>
           <div class="menu">
-            <!-- <el-tree
+            <el-tree
               style="max-width: 600px"
               :props="props"
               :load="loadNode"
               lazy
               show-checkbox
-            /> -->
+            />
           </div>
         </div>
       </div>

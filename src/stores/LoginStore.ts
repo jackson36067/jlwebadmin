@@ -4,13 +4,14 @@ import { ref } from "vue";
 interface loginParams {
   username: string;
   password: string;
+  code: string;
 }
 export const useLoginStore = defineStore(
   "user",
   () => {
     const userInfo = ref({});
-    const doUserLogin = async ({ username, password }: loginParams) => {
-      const res = await LoginAPI({ username, password });
+    const doUserLogin = async ({ username, password, code }: loginParams) => {
+      const res = await LoginAPI({ username, password, code });
       console.log(res);
       userInfo.value = res.data;
     };

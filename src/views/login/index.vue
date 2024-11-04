@@ -1,27 +1,41 @@
 <script setup lang="ts">
 import Background from "@/assets/images/background.jpeg";
 import { useLoginStore } from "@/stores/LoginStore";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 import "element-plus/theme-chalk/el-message.css";
 import router from "@/router";
 import svgIcon from "@/components/svg/svgIcon.vue";
+import { getCodeAPI } from "@/apis/login";
+import { error } from "console";
 const loginForm = ref({
   username: "admin",
   password: "123456",
+  code: "",
 });
 const loginRef = ref(null);
 const loginRules = {
   username: [{ required: true, trigger: "blur", message: "用户名不能为空" }],
   password: [{ required: true, trigger: "blur", message: "密码不能为空" }],
+  code: [{ required: true, trigger: "blur", message: "验证码不能为空" }],
 };
+// 验证码路径
+const codeUrl = ref("");
 const loginStore = useLoginStore();
 const doLogin = () => {
   loginRef.value.validate(async (valid) => {
     if (valid) {
-      const { username, password } = loginForm.value;
+      const { username, password, code } = loginForm.value;
       // 发起请求
-      await loginStore.doUserLogin({ username, password });
+      await loginStore
+        .doUserLogin({ username, password, code })
+        .catch((error) => {
+          // 如果登录出现错误刷新验证码
+          getCode();
+          // 清空验证码栏
+          loginForm.value.code = "";
+          return Promise.reject(error);
+        });
       // 提示登录成功
       ElMessage({ type: "success", message: "登录成功" });
       // 登录按钮键显示加载
@@ -32,6 +46,15 @@ const doLogin = () => {
     }
   });
 };
+// 获取验证码接口
+const getCode = async () => {
+  const res = await getCodeAPI();
+  codeUrl.value = URL.createObjectURL(new Blob([res], { type: "image/png" }));
+};
+onMounted(() => {
+  getCode();
+});
+
 const loading = ref(false);
 </script>
 <template>
@@ -70,7 +93,7 @@ const loading = ref(false);
           </template>
         </el-input>
       </el-form-item>
-      <!-- <el-form-item prop="code">
+      <el-form-item prop="code">
         <el-input
           v-model="loginForm.code"
           auto-complete="off"
@@ -78,13 +101,13 @@ const loading = ref(false);
           style="width: 63%"
         >
           <template v-slot:prefix>
-            <svg-icon name="validCode" class="el-input__icon input-icon" />
+            <svg-icon name="validCode" class="el-input input-icon" />
           </template>
         </el-input>
         <div class="login-code">
           <img :src="codeUrl" @click="getCode" />
         </div>
-      </el-form-item> -->
+      </el-form-item>
       <!-- <el-checkbox v-model="loginForm.rememberMe" style="margin: 0 0 25px 0">
         记住我
       </el-checkbox> -->
@@ -148,14 +171,14 @@ const loading = ref(false);
 //   text-align: center;
 //   color: #bfbfbf;
 // }
-// .login-code {
-//   width: 33%;
-//   display: inline-block;
-//   height: 38px;
-//   margin-left: 15px;
-//   img {
-//     cursor: pointer;
-//     vertical-align: middle;
-//   }
-// }
+.login-code {
+  width: 33%;
+  display: inline-block;
+  height: 38px;
+  margin-left: 15px;
+  img {
+    cursor: pointer;
+    vertical-align: middle;
+  }
+}
 </style>

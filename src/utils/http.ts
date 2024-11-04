@@ -3,12 +3,20 @@ import { useLoginStore } from "@/stores/LoginStore";
 import router from "@/router";
 import { ElMessage } from "element-plus";
 import "element-plus/theme-chalk/el-message.css";
+import { ref } from "vue";
 const httpInstance = axios.create({
   baseURL: "http://localhost:8080/admin/",
   timeout: 5000,
 });
+// 验证码
+const captcha = ref("");
 httpInstance.interceptors.request.use(
   (config) => {
+    // 发起请求时携带验证码
+    console.log("当前验证码:", captcha.value);
+    if (config.headers.code == null) {
+      config.headers.Code = captcha.value;
+    }
     const loginStore = useLoginStore();
     // @ts-ignore
     const token: string = loginStore.userInfo.token;
@@ -25,6 +33,12 @@ httpInstance.interceptors.request.use(
 );
 httpInstance.interceptors.response.use(
   (config) => {
+    // 当获取验证码时使用header保存验证码
+    const headers = config.headers;
+    if (headers["code"] != null) {
+      captcha.value = headers["code"];
+    }
+
     return config.data;
   },
   (error) => {
