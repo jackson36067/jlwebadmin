@@ -16,7 +16,7 @@ const menuOpen = () => {
   // isCollapse.value = false;
 };
 const menuClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
+  // console.log(key, keyPath);
 };
 
 // 点击首页填转到首页

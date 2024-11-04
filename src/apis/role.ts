@@ -9,3 +9,11 @@ export const getRoleListAPI = () => {
     url: "role/all",
   });
 };
+
+export const getRoleWithPagingAPI = (params: object) => {
+  return httpInstance({
+    method: "get",
+    url: "role/list",
+    params,
+  });
+};

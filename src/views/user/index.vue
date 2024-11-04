@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref, computed } from "vue";
 import { getDeptListAPI } from "@/apis/dept"; // 获取部门列表请求
 import {
   Plus,
@@ -24,7 +24,6 @@ import "element-plus/theme-chalk/el-message-box.css";
 import { ElMessage, ElMessageBox, type DropdownInstance } from "element-plus"; // 弹窗
 import { getEnabledJobListAPI } from "@/apis/job";
 import { getRoleListAPI } from "@/apis/role";
-import { fa } from "element-plus/es/locales.mjs";
 
 // 是否折叠左侧菜单
 const isCollapse = inject("isCollapse", ref(false));
@@ -50,19 +49,26 @@ const getDeptList = async () => {
 };
 
 const form = ref({
+  usernameOrEmail: "",
   enabled: "",
   createTime: "",
 });
 
+// 将date-select选择的日期转换成'yyyy-MM-dd HH:mm:ss'
+function formatDateForBackend(date) {
+  if (!date) return null;
+  return date.toISOString().slice(0, 19); // 将 ISO 格式转换为 'yyyy-MM-dd HH:mm:ss'
+}
+
 // 封装请求条件
-const queryParams = ref({
+const queryParams = computed(() => ({
   page: 1,
   pageSize: 10,
-  usernameOrEmail: "", // 绑定表单中的输入框
-  begin: form.value.createTime[0],
-  end: form.value.createTime[1],
+  usernameOrEmail: form.value.usernameOrEmail,
   enabled: form.value.enabled,
-});
+  begin: formatDateForBackend(form.value.createTime[0]) || null, // 默认值为 null
+  end: formatDateForBackend(form.value.createTime[1]) || null, // 默认值为 null
+}));
 const total = ref<number>(0);
 
 // 组件加载自动请求获取用户数据
@@ -95,7 +101,7 @@ const queryUserList = () => {
 function resetFields() {
   form.value.createTime = "";
   form.value.enabled = "";
-  queryParams.value.usernameOrEmail = "";
+  form.value.usernameOrEmail = "";
   getUserList();
 }
 const doReset = () => {
@@ -436,7 +442,7 @@ const selectionUpdateUser = () => {
           >
             <el-form-item class="form-item">
               <el-input
-                v-model="queryParams.usernameOrEmail"
+                v-model="form.usernameOrEmail"
                 placeholder="输入名称或者邮箱搜索"
                 style="width: 210px"
               />
