@@ -77,3 +77,15 @@ export const deleteUserByUserIdAPI = (ids: Array<string>) => {
     data: ids,
   });
 };
+
+/**
+ * 导出用户数据
+ * @returns
+ */
+export const exportUserInfoAPI = () => {
+  return httpInstance({
+    method: "post",
+    url: "user/export",
+    responseType: "blob", // 设置响应类型为 blob
+  });
+};

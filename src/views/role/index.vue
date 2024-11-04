@@ -202,8 +202,10 @@ const refreshUserInfo = () => {
       </div>
       <div class="role">
         <div class="table">
+          <div class="list">角色列表</div>
           <el-table
             :data="roleList"
+            border
             style="width: 100%"
             show-overflow-tooltip
             v-loading="loading"
@@ -232,16 +234,17 @@ const refreshUserInfo = () => {
             <el-table-column
               prop="description"
               label="描述"
-              width="160"
+              width="300"
               align="center"
+              show-overflow-tooltip
             />
             <el-table-column
               prop="createTime"
               label="创建时间"
-              width="200"
+              width="250"
               align="center"
             />
-            <el-table-column label="操作" min-width="120">
+            <el-table-column label="操作" min-width="100" align="center">
               <template #default="{ row }">
                 <el-button type="warning" :icon="Edit" circle />
                 <el-button type="danger" :icon="Delete" circle />
@@ -249,7 +252,33 @@ const refreshUserInfo = () => {
             </el-table-column>
           </el-table>
         </div>
-        <div class="assignment-role"></div>
+        <div class="assignment-role">
+          <div class="list">
+            <el-popover
+              placement="top-start"
+              :width="200"
+              trigger="hover"
+              content="选择指定角色分配菜单"
+              popper-style="background-color:#000; font-size: 12px"
+            >
+              <template #reference>
+                <span>菜单分配</span>
+              </template>
+            </el-popover>
+            <el-button style="background-color: #000; color: #fff">
+              保存
+            </el-button>
+          </div>
+          <div class="menu">
+            <!-- <el-tree
+              style="max-width: 600px"
+              :props="props"
+              :load="loadNode"
+              lazy
+              show-checkbox
+            /> -->
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -316,10 +345,38 @@ const refreshUserInfo = () => {
       margin-top: 30px;
       display: flex;
       .table {
-        flex: 2;
+        flex: 3;
+        .list {
+          box-sizing: border-box;
+          width: 100%;
+          height: 55px;
+          border: 1px solid #ebeef5;
+          border-bottom: none;
+          line-height: 55px;
+          padding-left: 20px;
+          font-size: 16px;
+          font-weight: 700;
+          color: #303133;
+        }
       }
       .assignment-role {
+        margin-left: 20px;
         flex: 1;
+        border: 1px solid #ebeef5;
+        .list {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          box-sizing: border-box;
+          width: 100%;
+          height: 55px;
+          border-bottom: 1px solid #ebeef5;
+          line-height: 55px;
+          padding: 0 20px;
+          font-size: 16px;
+          font-weight: 700;
+          color: #303133;
+        }
       }
     }
   }

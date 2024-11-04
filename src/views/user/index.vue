@@ -14,6 +14,7 @@ import svgIcon from "@/components/svg/svgIcon.vue";
 import {
   addUserAPI,
   deleteUserByUserIdAPI,
+  exportUserInfoAPI,
   getUserInfoByIdAPI,
   getUserListAPI,
   getUserListByDeptAPI,
@@ -24,6 +25,8 @@ import "element-plus/theme-chalk/el-message-box.css";
 import { ElMessage, ElMessageBox, type DropdownInstance } from "element-plus"; // 弹窗
 import { getEnabledJobListAPI } from "@/apis/job";
 import { getRoleListAPI } from "@/apis/role";
+import { error } from "console";
+import { formatDateToString, formatLocalDateTime } from "@/utils/dateFormat";
 
 // 是否折叠左侧菜单
 const isCollapse = inject("isCollapse", ref(false));
@@ -75,8 +78,10 @@ const total = ref<number>(0);
 const userList = ref([]);
 const getUserList = async () => {
   const res = await getUserListAPI(queryParams.value);
-  // console.log(res.data);
   userList.value = res.data.list;
+  userList.value.forEach((item) => {
+    item.createTime = formatLocalDateTime(item.createTime);
+  });
   total.value = res.data.total;
 };
 onMounted(() => {
@@ -416,6 +421,36 @@ const selectionUpdateUser = () => {
   // 将表格展示出来
   dialogUpdateTableVisible.value = true;
 };
+
+// 导出用户数据
+const exportUserInfo = async () => {
+  await exportUserInfoAPI()
+    .then((data) => {
+      console.log(data);
+      if (!data) {
+        return;
+      }
+      const url = window.URL.createObjectURL(
+        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+      );
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = url;
+      // 设置年份
+      const date = new Date();
+      const dateFormat = formatDateToString(date);
+      // 下载文件
+      link.setAttribute("download", `${dateFormat}用户数据` + ".xls");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link); //下载完成移除元素
+      window.URL.revokeObjectURL(url); //释放掉blob对象
+      ElMessage({ type: "success", message: "导出成功" });
+    })
+    .catch((error) => {
+      console.error("下载错误:", error);
+    });
+};
 </script>
 <template>
   <div class="body" :class="{ left: isCollapse }">
@@ -518,7 +553,12 @@ const selectionUpdateUser = () => {
             >
               删除
             </el-button>
-            <el-button type="warning" :icon="Download" style="font-size: 12px">
+            <el-button
+              type="warning"
+              :icon="Download"
+              style="font-size: 12px"
+              @click="exportUserInfo"
+            >
               导出
             </el-button>
             <el-button
