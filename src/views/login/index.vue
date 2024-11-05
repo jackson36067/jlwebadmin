@@ -23,6 +23,8 @@ const loginRules = {
 const codeUrl = ref("");
 const loginStore = useLoginStore();
 
+const loading = ref(false);
+
 // 登录函数
 const login = async () => {
   const { username, password, code } = loginForm.value;
@@ -69,8 +71,6 @@ const getCode = async () => {
 onMounted(() => {
   getCode();
 });
-
-const loading = ref(false);
 </script>
 <template>
   <div class="login">

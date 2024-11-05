@@ -9,7 +9,16 @@ import {
   Download,
   Edit,
 } from "@element-plus/icons-vue"; // 引入图标
-import { getRoleWithPagingAPI } from "@/apis/role";
+import { getRoleWithPagingAPI, updateRoleMenuAPI } from "@/apis/role";
+import { getMenuListAPI } from "@/apis/menu";
+import { useLoginStore } from "@/stores/LoginStore";
+import { formatDateToString, formatLocalDateTime } from "@/utils/dateFormat";
+import { ElMessage } from "element-plus";
+
+interface Tree {
+  label: string;
+  children?: Tree[];
+}
 
 // 是否折叠左侧菜单
 const isCollapse = inject("isCollapse", ref(false));
@@ -70,6 +79,9 @@ const roleList = ref<Array<object>>([]);
 const getRoleList = async () => {
   const res = await getRoleWithPagingAPI(queryParams.value);
   roleList.value = res.data.list;
+  roleList.value.forEach((item) => {
+    item.createTime = formatLocalDateTime(item.createTime);
+  });
 };
 onMounted(() => {
   getRoleList();
@@ -102,7 +114,7 @@ const isShowQuery = () => {
   showQuery.value = showQuery.value === true ? false : true;
 };
 
-// 点击刷新按钮刷新用户信息
+// 点击刷新按钮刷新角色信息
 const loading = ref(false);
 const refreshUserInfo = () => {
   loading.value = true;
@@ -111,6 +123,69 @@ const refreshUserInfo = () => {
     getRoleList();
     loading.value = false;
   }, 2000);
+};
+
+// 将得到的菜单改成Tree展示所需类型
+const formatMenuListData = (data: Array<object>) => {
+  return data.map((item: any) => {
+    return {
+      id: item.id,
+      label: item.title,
+      children: item.menuListVOList
+        ? formatMenuListData(item.menuListVOList)
+        : [], // 递归转换子部门
+    };
+  });
+};
+
+// 右侧菜单栏获取
+const menuList = ref<Array<object>>([]);
+const menuData = ref<Tree[]>([]);
+const getMenuList = async () => {
+  const res = await getMenuListAPI({});
+  menuList.value = res.data;
+  // 菜单栏tree展示
+  menuData.value = formatMenuListData(menuList.value);
+};
+const defaultProps = {
+  children: "children",
+  label: "label",
+};
+onMounted(() => {
+  getMenuList();
+});
+
+// 保存按钮可用性
+const saveButton = ref(true);
+//保存被点击的角色id
+const roleId = ref("");
+// 当点击表格中的单元格时配置默认要选中的菜单
+// treeref
+const treeRef = ref(null);
+const rowClick = (role) => {
+  treeRef.value.setCheckedKeys(role.menuIdList, false);
+  saveButton.value = false;
+  roleId.value = role.id;
+};
+
+// 保存该角色的菜单
+
+// 保存角色菜单请求参数
+const updateRoleMenu = ref({
+  id: "",
+  menuIdList: [],
+});
+
+const selectionMenuIdList = ref([]);
+const saveRoleMenuList = async () => {
+  const selectionMenuList = treeRef.value.getCheckedNodes();
+  selectionMenuList.forEach((item) => {
+    selectionMenuIdList.value.push(item.id);
+  });
+  updateRoleMenu.value.id = roleId.value;
+  updateRoleMenu.value.menuIdList = selectionMenuIdList.value;
+  await updateRoleMenuAPI(updateRoleMenu.value);
+  ElMessage({ type: "success", message: "保存成功" });
 };
 </script>
 <template>
@@ -210,6 +285,7 @@ const refreshUserInfo = () => {
             show-overflow-tooltip
             v-loading="loading"
             stripe
+            @row-click="rowClick"
           >
             <el-table-column type="selection" width="55" />
             <el-table-column
@@ -265,17 +341,26 @@ const refreshUserInfo = () => {
                 <span>菜单分配</span>
               </template>
             </el-popover>
-            <el-button style="background-color: #000; color: #fff">
+            <el-button
+              type="info"
+              :disabled="saveButton"
+              @click="saveRoleMenuList"
+            >
               保存
             </el-button>
           </div>
           <div class="menu">
             <el-tree
-              style="max-width: 600px"
-              :props="props"
-              :load="loadNode"
-              lazy
+              ref="treeRef"
+              style="max-width: 600px; padding: 10px 20px; color: #000"
+              :data="menuData"
               show-checkbox
+              draggable
+              node-key="id"
+              accordion
+              :props="defaultProps"
+              :check-strictly="true"
+              :check-on-click-node="true"
             />
           </div>
         </div>
@@ -284,7 +369,7 @@ const refreshUserInfo = () => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .body {
   box-sizing: border-box;
   position: absolute;
@@ -380,6 +465,9 @@ const refreshUserInfo = () => {
       }
     }
   }
+}
+::v-deep .el-tree-node__content.is-checked {
+  background-color: black !important;
 }
 .left {
   left: 59px;

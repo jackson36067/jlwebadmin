@@ -17,3 +17,11 @@ export const getRoleWithPagingAPI = (params: object) => {
     params,
   });
 };
+
+export const updateRoleMenuAPI = (data: object) => {
+  return httpInstance({
+    method: "put",
+    url: "role/update/menu",
+    data,
+  });
+};
