@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, ref, computed } from "vue";
-import { getDeptListAPI } from "@/apis/dept"; // 获取部门列表请求
+import { getDeptByIdAPI, getDeptListAPI } from "@/apis/dept"; // 获取部门列表请求
 import {
   Plus,
   Search,
@@ -23,24 +23,14 @@ import {
 // 手动引入ElMesssageBox样式
 import "element-plus/theme-chalk/el-message-box.css";
 import { ElMessage, ElMessageBox, type DropdownInstance } from "element-plus"; // 弹窗
-import { getEnabledJobListAPI } from "@/apis/job";
-import { getRoleListAPI } from "@/apis/role";
-import { error } from "console";
+import { getEnabledJobListAPI, getJobByIdsAPI } from "@/apis/job";
+import { getRoleByIdsAPI, getRoleListAPI } from "@/apis/role";
 import { formatDateToString, formatLocalDateTime } from "@/utils/dateFormat";
+import { transformData } from "@/utils/dataFormat";
 
 // 是否折叠左侧菜单
 const isCollapse = inject("isCollapse", ref(false));
 
-// 封装生成tree数据函数
-function transformData(data: any) {
-  return data.map((item: any) => {
-    return {
-      value: item.id,
-      label: item.name,
-      children: item.subDeptVOList ? transformData(item.subDeptVOList) : [], // 递归转换子部门
-    };
-  });
-}
 // 获取部门数据
 const transformedData = ref([]);
 const dialogDeptData = ref([]);
@@ -291,7 +281,7 @@ const dialogUpdateForm = ref({
   roles: [],
 });
 
-// 新增员工弹窗确认后修改员工
+// 更新员工弹窗确认后修改员工
 const dialogUpdateTableVisible = ref(false);
 const getUserInfoById = async (id: string) => {
   // 发起请求获取用户信息
@@ -314,8 +304,10 @@ const dialogUpdateUserFormRef = ref(null);
  */
 const updateUser = () => {
   dialogUpdateUserFormRef.value.validate(async (valid) => {
+    console.log(dialogUpdateForm.value);
     if (valid) {
       // 执行修改操作
+
       await updateUserByUserIdAPI(
         dialogUpdateForm.value.id,
         dialogUpdateForm.value
@@ -426,7 +418,7 @@ const selectionUpdateUser = () => {
 const exportUserInfo = async () => {
   await exportUserInfoAPI()
     .then((data) => {
-      console.log(data);
+      // console.log(data);
       if (!data) {
         return;
       }
@@ -440,7 +432,7 @@ const exportUserInfo = async () => {
       const date = new Date();
       const dateFormat = formatDateToString(date);
       // 下载文件
-      link.setAttribute("download", `${dateFormat}用户数据` + ".xls");
+      link.setAttribute("download", `${dateFormat}用户数据` + ".xlsx");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link); //下载完成移除元素
@@ -462,11 +454,9 @@ const exportUserInfo = async () => {
           filterable
           class="tree"
           @change="getUserListByDeptId"
-          placeholder="请选择"
+          placeholder="请选择部门"
           :check-strictly="true"
         />
-        <el-divider />
-        <div class="text">请 选 择 部 门</div>
       </div>
       <div class="user">
         <div class="query" v-if="showQuery">
@@ -923,15 +913,9 @@ const exportUserInfo = async () => {
   padding: 26px 32px;
   .main {
     display: flex;
+    flex-direction: row;
     .dept {
       flex: 1;
-      .text {
-        text-align: center;
-        font-size: 14px;
-        color: #c0c4cc;
-        font-weight: 700;
-        text-shadow: 1px 1px;
-      }
       .tree {
         width: 100%;
       }

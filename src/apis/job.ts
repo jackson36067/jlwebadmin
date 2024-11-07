@@ -6,3 +6,11 @@ export const getEnabledJobListAPI = () => {
     url: "job/enabled/list",
   });
 };
+
+export const getJobByIdsAPI = (data: Array<string>) => {
+  return httpInstance({
+    method: "post",
+    url: "job/ids",
+    data,
+  });
+};

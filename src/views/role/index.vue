@@ -9,11 +9,18 @@ import {
   Download,
   Edit,
 } from "@element-plus/icons-vue"; // 引入图标
-import { getRoleWithPagingAPI, updateRoleMenuAPI } from "@/apis/role";
+import {
+  addRoleAPI,
+  deleteRoleByIdsAPI,
+  exportRoleDataAPI,
+  getRoleWithPagingAPI,
+  updateRoleAPI,
+  updateRoleMenuAPI,
+} from "@/apis/role";
 import { getMenuListAPI } from "@/apis/menu";
 import { useLoginStore } from "@/stores/LoginStore";
 import { formatDateToString, formatLocalDateTime } from "@/utils/dateFormat";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 interface Tree {
   label: string;
@@ -146,6 +153,8 @@ const getMenuList = async () => {
   menuList.value = res.data;
   // 菜单栏tree展示
   menuData.value = formatMenuListData(menuList.value);
+  // 新增栏权限选择
+  permissionData.value = formatMenuListData(menuList.value);
 };
 const defaultProps = {
   children: "children",
@@ -176,6 +185,7 @@ const updateRoleMenu = ref({
   menuIdList: [],
 });
 
+// 最终被选中的菜单id数组
 const selectionMenuIdList = ref([]);
 const saveRoleMenuList = async () => {
   const selectionMenuList = treeRef.value.getCheckedNodes();
@@ -186,6 +196,233 @@ const saveRoleMenuList = async () => {
   updateRoleMenu.value.menuIdList = selectionMenuIdList.value;
   await updateRoleMenuAPI(updateRoleMenu.value);
   ElMessage({ type: "success", message: "保存成功" });
+};
+
+// 数据权限数据封装(select-tree)
+const permissionData = ref({});
+
+// 新增角色对话框显示
+const dialogAddVisible = ref<boolean>(false);
+
+// 封装新增角色参数对象
+const addRoleParams = ref({
+  name: "",
+  level: 3,
+  dataScope: "全部",
+  permissionList: [],
+  description: "",
+});
+
+// 弹窗表格dom对象
+const addDialogFormRef = ref(null);
+
+// 弹窗表格鉴定规则
+const rules = {
+  name: [{ required: true, trigger: "blur", message: "角色名称不能为空" }],
+  description: [{ required: true, trigger: "blur", message: "描述不能为空" }],
+};
+
+// 权限选择树dom元素
+const permissionSelectRef = ref(null);
+
+// 新增用户
+const doAddRole = () => {
+  addDialogFormRef.value.validate(async (valid) => {
+    if (valid) {
+      // 保存选择的权限的id
+      const selectPermissionIdList = ref([]);
+      if (addRoleParams.value.dataScope === "自定义") {
+        // 获取自定义时选择的菜单(得到菜单的id数组)
+        if (permissionSelectRef.value.getCheckedNodes() !== null) {
+          const permissionNodes = permissionSelectRef.value.getCheckedNodes();
+          permissionNodes.forEach((element: object) => {
+            selectPermissionIdList.value.push(element.id);
+          });
+        }
+        // 封装条件
+        addRoleParams.value.permissionList = selectPermissionIdList.value;
+      }
+      // 发起新增用户请求
+      await addRoleAPI(addRoleParams.value);
+      // 刷新页面
+      getRoleList();
+      // 关闭dialog
+      dialogAddVisible.value = false;
+      // 提示添加成功
+      ElMessage({ type: "success", message: "新增成功" });
+    }
+  });
+};
+
+// 修改角色按钮可用性
+const updateButtonDisabled = ref<boolean>(true);
+// 删除按钮的可用性
+const deleteButtonDisabled = ref<boolean>(true);
+
+// 封装修改角色参数
+const updateRoleParams = ref({
+  id: "",
+  name: "",
+  level: 3,
+  dataScope: "全部",
+  permissionList: [],
+  description: "",
+});
+
+// 修改角色弹窗是否可见
+const dialogUpdateVisible = ref<boolean>(false);
+
+// 修改treedom元素
+const updatePermissionSelectRef = ref(null);
+
+// 封装被选中的行id集合
+const deleteRoleIds = ref<Array<string>>([]);
+
+// 当复选框发生变化时触发该函数
+const handleSelectionChange = (val: Array<object>) => {
+  updateButtonDisabled.value = true;
+  // 如果只选中一个那么就可以使用修改
+  if (val.length == 1) {
+    updateButtonDisabled.value = false;
+    // 封装角色原本内容
+    updateRoleParams.value.id = val[0].id;
+    updateRoleParams.value.name = val[0].name;
+    updateRoleParams.value.level = val[0].level;
+    updateRoleParams.value.dataScope = val[0].dataScope;
+    updateRoleParams.value.description = val[0].description;
+    updateRoleParams.value.permissionList = val[0].menuIdList;
+  }
+  // 只要有选中就解放删除按钮
+  if (val.length >= 1) {
+    deleteButtonDisabled.value = false;
+  }
+  // 保存复选框选中的行的id
+  // 复选框每次发生变化时先初始化删除id值,防止id重复
+  deleteRoleIds.value = [];
+  val.forEach((item) => {
+    deleteRoleIds.value.push(item.id);
+  });
+  console.log(deleteRoleIds.value);
+};
+
+// 修改角色前的数据准备
+const updateRole = () => {
+  dialogUpdateVisible.value = true;
+};
+
+const updateDialogFormRef = ref(null);
+
+// 修改角色
+const doUpdateRole = () => {
+  updateDialogFormRef.value.validate(async (valid) => {
+    if (valid) {
+      // 保存选择的权限的id
+      const selectPermissionIdList = ref([]);
+      // 获取自定义时选择的菜单(得到菜单的id数组)
+      if (updateRoleParams.value.dataScope === "自定义") {
+        if (updatePermissionSelectRef.value.getCheckedNodes() !== null) {
+          const permissionNodes =
+            updatePermissionSelectRef.value.getCheckedNodes();
+          permissionNodes.forEach((element: object) => {
+            selectPermissionIdList.value.push(element.id);
+          });
+        }
+        // 封装条件
+        updateRoleParams.value.permissionList = selectPermissionIdList.value;
+      }
+      // 发起新增用户请求
+      await updateRoleAPI(updateRoleParams.value);
+      // 刷新页面
+      getRoleList();
+      // 关闭dialog
+      dialogUpdateVisible.value = false;
+      // 提示添加成功
+      ElMessage({ type: "success", message: "修改成功" });
+    }
+  });
+};
+
+// 修改行(每个行旁边的修改按钮)
+const updateRoleRow = (row) => {
+  // 让弹窗可见
+  dialogUpdateVisible.value = true;
+  // 封装参数
+  updateRoleParams.value.id = row.id;
+  updateRoleParams.value.name = row.name;
+  updateRoleParams.value.level = row.level;
+  updateRoleParams.value.dataScope = row.dataScope;
+  updateRoleParams.value.description = row.description;
+  updateRoleParams.value.permissionList = row.menuIdList;
+};
+
+// 导出角色数据
+const exportRoleData = async () => {
+  await exportRoleDataAPI()
+    .then((data) => {
+      // console.log(data);
+      if (!data) {
+        return;
+      }
+      const url = window.URL.createObjectURL(
+        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+      );
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = url;
+      // 设置年份
+      const date = new Date();
+      const dateFormat = formatDateToString(date);
+      // 下载文件
+      link.setAttribute("download", `${dateFormat}角色数据` + ".xlsx");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link); //下载完成移除元素
+      window.URL.revokeObjectURL(url); //释放掉blob对象
+      ElMessage({ type: "success", message: "导出成功" });
+    })
+    .catch((error) => {
+      console.error("下载错误:", error);
+    });
+};
+
+// 删除角色
+
+const deleteRole = () => {
+  ElMessageBox.confirm(`此操作将删除该角色吗 , 是否继续？`, "Warning", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      await deleteRoleByIdsAPI(deleteRoleIds.value);
+      ElMessage({ type: "success", message: "删除成功" });
+      // 刷新页面
+      getRoleList();
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消删除",
+      });
+    });
+};
+
+const deleteRoleByIds = async () => {
+  console.log(deleteRoleIds.value.length);
+  if (deleteRoleIds.value.length < 1) {
+    ElMessage({ type: "warning", message: "请选择要删除的角色" });
+    return;
+  }
+  deleteRole();
+};
+
+// 通过删除按钮删除角色(每一行旁边的删除按钮)
+const deleteRoleRow = async (id: string) => {
+  // 先重置保存删除id的数组,防止删除复选框选中的角色
+  deleteRoleIds.value = [];
+  // 在赋值该行的id给保存删除id的数组
+  deleteRoleIds.value.push(id);
+  deleteRole();
 };
 </script>
 <template>
@@ -242,17 +479,35 @@ const saveRoleMenuList = async () => {
           <el-button
             :icon="Plus"
             style="background-color: #000; color: #fff; font-size: 12px"
+            @click="dialogAddVisible = true"
           >
             新增
           </el-button>
 
-          <el-button type="success" :icon="EditPen" style="font-size: 12px">
+          <el-button
+            type="success"
+            :icon="EditPen"
+            style="font-size: 12px"
+            :disabled="updateButtonDisabled"
+            @click="updateRole"
+          >
             修改
           </el-button>
-          <el-button type="danger" :icon="Delete" style="font-size: 12px">
+          <el-button
+            type="danger"
+            :icon="Delete"
+            style="font-size: 12px"
+            :disabled="deleteButtonDisabled"
+            @click="deleteRoleByIds"
+          >
             删除
           </el-button>
-          <el-button type="warning" :icon="Download" style="font-size: 12px">
+          <el-button
+            type="warning"
+            :icon="Download"
+            style="font-size: 12px"
+            @click="exportRoleData"
+          >
             导出
           </el-button>
         </div>
@@ -286,6 +541,7 @@ const saveRoleMenuList = async () => {
             v-loading="loading"
             stripe
             @row-click="rowClick"
+            @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" width="55" />
             <el-table-column
@@ -322,8 +578,18 @@ const saveRoleMenuList = async () => {
             />
             <el-table-column label="操作" min-width="100" align="center">
               <template #default="{ row }">
-                <el-button type="warning" :icon="Edit" circle />
-                <el-button type="danger" :icon="Delete" circle />
+                <el-button
+                  type="warning"
+                  :icon="Edit"
+                  circle
+                  @click="updateRoleRow(row)"
+                />
+                <el-button
+                  type="danger"
+                  :icon="Delete"
+                  circle
+                  @click="deleteRoleRow(row.id)"
+                />
               </template>
             </el-table-column>
           </el-table>
@@ -367,6 +633,149 @@ const saveRoleMenuList = async () => {
       </div>
     </div>
   </div>
+  <!-- 新增角色对话框 -->
+  <el-dialog
+    v-model="dialogAddVisible"
+    title="新增角色"
+    width="500"
+    :destroy-on-close="true"
+    :modal="true"
+    :close-on-click-modal="false"
+  >
+    <el-form
+      label-width="80px"
+      :inline="true"
+      ref="addDialogFormRef"
+      :rules="rules"
+      :model="addRoleParams"
+    >
+      <el-form-item
+        label="角色名称"
+        style="width: 95%; margin-top: 10px"
+        prop="name"
+      >
+        <el-input v-model="addRoleParams.name"></el-input>
+      </el-form-item>
+      <el-form-item label="角色等级" style="width: 43%">
+        <el-input-number
+          v-model="addRoleParams.level"
+          class="mx-4"
+          :min="1"
+          :max="10"
+          controls-position="right"
+          style="width: 100%"
+        />
+      </el-form-item>
+      <el-form-item label="数据范围" style="width: 43%">
+        <el-select v-model="addRoleParams.dataScope" style="width: 100%">
+          <el-option label="全部" value="全部" />
+          <el-option label="本级" value="本级" />
+          <el-option label="自定义" value="自定义" />
+        </el-select>
+      </el-form-item>
+      <el-form-item
+        label="数据权限"
+        style="width: 95%"
+        v-if="addRoleParams.dataScope === '自定义'"
+      >
+        <el-tree-select
+          ref="permissionSelectRef"
+          v-model="addRoleParams.permissionList"
+          :data="permissionData"
+          check-strictly
+          :render-after-expand="false"
+          show-checkbox
+          style="width: 100%"
+          multiple
+          node-key="id"
+        />
+      </el-form-item>
+      <el-form-item label="描述信息" style="width: 95%" prop="description">
+        <el-input
+          v-model="addRoleParams.description"
+          style="width: 100%"
+          :rows="5"
+          type="textarea"
+        />
+      </el-form-item>
+      <el-form-item style="margin-left: 302px">
+        <el-button @click="dialogAddVisible = false">取消</el-button>
+        <el-button type="primary" @click="doAddRole"> 确认 </el-button>
+      </el-form-item>
+    </el-form>
+  </el-dialog>
+
+  <!-- 修改角色对话框 -->
+  <el-dialog
+    v-model="dialogUpdateVisible"
+    title="修改角色"
+    width="500"
+    :destroy-on-close="true"
+    :modal="true"
+    :close-on-click-modal="false"
+  >
+    <el-form
+      label-width="80px"
+      :inline="true"
+      ref="updateDialogFormRef"
+      :rules="rules"
+      :model="updateRoleParams"
+    >
+      <el-form-item
+        label="角色名称"
+        style="width: 95%; margin-top: 10px"
+        prop="name"
+      >
+        <el-input v-model="updateRoleParams.name"></el-input>
+      </el-form-item>
+      <el-form-item label="角色等级" style="width: 43%">
+        <el-input-number
+          v-model="updateRoleParams.level"
+          class="mx-4"
+          :min="1"
+          :max="10"
+          controls-position="right"
+          style="width: 100%"
+        />
+      </el-form-item>
+      <el-form-item label="数据范围" style="width: 43%">
+        <el-select v-model="updateRoleParams.dataScope" style="width: 100%">
+          <el-option label="全部" value="全部" />
+          <el-option label="本级" value="本级" />
+          <el-option label="自定义" value="自定义" />
+        </el-select>
+      </el-form-item>
+      <el-form-item
+        label="数据权限"
+        style="width: 95%"
+        v-if="updateRoleParams.dataScope === '自定义'"
+      >
+        <el-tree-select
+          ref="updatePermissionSelectRef"
+          v-model="updateRoleParams.permissionList"
+          :data="permissionData"
+          show-checkbox
+          check-strictly
+          multiple
+          :render-after-expand="false"
+          style="width: 100%"
+          node-key="id"
+        />
+      </el-form-item>
+      <el-form-item label="描述信息" style="width: 95%" prop="description">
+        <el-input
+          v-model="updateRoleParams.description"
+          style="width: 100%"
+          :rows="5"
+          type="textarea"
+        />
+      </el-form-item>
+      <el-form-item style="margin-left: 302px">
+        <el-button @click="dialogUpdateVisible = false">取消</el-button>
+        <el-button type="primary" @click="doUpdateRole"> 确认 </el-button>
+      </el-form-item>
+    </el-form>
+  </el-dialog>
 </template>
 
 <style lang="scss">

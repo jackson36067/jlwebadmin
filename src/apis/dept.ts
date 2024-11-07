@@ -7,3 +7,10 @@ export const getDeptListAPI = (params: object) => {
     params,
   });
 };
+
+export const getDeptByIdAPI = (id: string) => {
+  return httpInstance({
+    method: "get",
+    url: `dept/${id}`,
+  });
+};
