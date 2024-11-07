@@ -25,7 +25,11 @@ import "element-plus/theme-chalk/el-message-box.css";
 import { ElMessage, ElMessageBox, type DropdownInstance } from "element-plus"; // 弹窗
 import { getEnabledJobListAPI, getJobByIdsAPI } from "@/apis/job";
 import { getRoleByIdsAPI, getRoleListAPI } from "@/apis/role";
-import { formatDateToString, formatLocalDateTime } from "@/utils/dateFormat";
+import {
+  formatDateForBackend,
+  formatDateToString,
+  formatLocalDateTime,
+} from "@/utils/dateFormat";
 import { transformData } from "@/utils/dataFormat";
 
 // 是否折叠左侧菜单
@@ -46,12 +50,6 @@ const form = ref({
   enabled: "",
   createTime: "",
 });
-
-// 将date-select选择的日期转换成'yyyy-MM-dd HH:mm:ss'
-function formatDateForBackend(date) {
-  if (!date) return null;
-  return date.toISOString().slice(0, 19); // 将 ISO 格式转换为 'yyyy-MM-dd HH:mm:ss'
-}
 
 // 封装请求条件
 const queryParams = computed(() => ({

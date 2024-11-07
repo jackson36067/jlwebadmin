@@ -19,7 +19,11 @@ import {
 } from "@/apis/role";
 import { getMenuListAPI } from "@/apis/menu";
 import { useLoginStore } from "@/stores/LoginStore";
-import { formatDateToString, formatLocalDateTime } from "@/utils/dateFormat";
+import {
+  formatDateForBackend,
+  formatDateToString,
+  formatLocalDateTime,
+} from "@/utils/dateFormat";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 interface Tree {
@@ -34,12 +38,6 @@ const form = ref({
   nameOrDescription: "",
   createTime: "",
 });
-
-// 将date-select选择的日期转换成'yyyy-MM-dd HH:mm:ss'
-function formatDateForBackend(date) {
-  if (!date) return null;
-  return date.toISOString().slice(0, 19); // 将 ISO 格式转换为 'yyyy-MM-dd HH:mm:ss'
-}
 
 // 封装请求条件
 const queryParams = computed(() => ({

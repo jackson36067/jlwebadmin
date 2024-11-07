@@ -29,3 +29,9 @@ export function formatDateToString(date: Date) {
 
   return `${year}年${month}月${day}日`; // 返回格式化字符串
 }
+
+// 将date-select选择的日期转换成'yyyy-MM-dd HH:mm:ss'
+export function formatDateForBackend(date) {
+  if (!date) return null;
+  return date.toISOString().slice(0, 19); // 将 ISO 格式转换为 'yyyy-MM-dd HH:mm:ss'
+}
