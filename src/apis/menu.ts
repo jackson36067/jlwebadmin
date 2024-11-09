@@ -25,3 +25,24 @@ export const addMenuAPI = (data: object) => {
     data,
   });
 };
+
+/**
+ * 编辑菜单
+ * @param data
+ * @returns
+ */
+export const updateMenuAPI = (data: object) => {
+  return httpInstance({
+    method: "put",
+    url: "menu/update",
+    data,
+  });
+};
+
+export const deleteMenuAPI = (data: Array<string>) => {
+  return httpInstance({
+    method: "delete",
+    url: "menu/delete",
+    data,
+  });
+};

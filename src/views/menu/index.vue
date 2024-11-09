@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { addMenuAPI, getMenuListAPI } from "@/apis/menu";
+import {
+  addMenuAPI,
+  deleteMenuAPI,
+  getMenuListAPI,
+  updateMenuAPI,
+} from "@/apis/menu";
 import SvgIcon from "@/components/svg/svgIcon.vue";
 import { formatDateForBackend, formatLocalDateTime } from "@/utils/dateFormat";
 import {
@@ -11,7 +16,7 @@ import {
   RefreshRight,
   Search,
 } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { inject, onMounted, ref, computed } from "vue";
 
 const collapse = inject("collapse");
@@ -43,6 +48,10 @@ const formatMenuListData = (data: Array<object>) => {
       iFrame: item.iFrame ? "是" : "否",
       cache: item.cache ? "是" : "否",
       hidden: item.hidden ? "是" : "否",
+      type: item.type,
+      name: item.name,
+      path: item.path,
+      pid: item.pid,
       createTime: formatLocalDateTime(item.createTime),
       // hasChildren: item.menuListVOList ? true : false,
       children: item.menuListVOList
@@ -163,7 +172,7 @@ const addForm = ref({
   type: 0, // 菜单类型：目录、菜单、按钮
   icon: "", // 菜单图标
   iFrame: false, // 外链菜单
-  cached: false, // 菜单缓存
+  cache: false, // 菜单缓存
   hidden: true, // 菜单可见
   title: "", // 菜单标题
   permission: "", // 权限标识
@@ -275,7 +284,7 @@ const dialogAddTableVisible = ref(false);
 // 图标列表是否展示
 const iconListVisable = ref(false);
 // 选择图标后更换图标
-const selectMenuIcon = (icon: string) => {
+const selectAddMenuIcon = (icon: string) => {
   addForm.value.icon = icon;
   iconListVisable.value = false;
 };
@@ -299,6 +308,114 @@ const submitFormAndAddMenu = () => {
       ElMessage({ type: "info", message: "请填写相应内容" });
     }
   });
+};
+
+// 修改弹窗是否可见
+const dialogUpdateTableVisible = ref<boolean>(false);
+// 修改参数
+const updateForm = ref({
+  id: "",
+  type: 0, // 菜单类型：目录、菜单、按钮
+  icon: "", // 菜单图标
+  iFrame: false, // 外链菜单
+  cache: false, // 菜单缓存
+  hidden: true, // 菜单可见1
+  title: "", // 菜单标题
+  permission: "", // 权限标识
+  path: "", // 路由地址
+  name: "", // 组件名称
+  component: "", // 组件路径
+  menuSort: 999, // 菜单排序
+  pid: "", // 上级类别
+});
+
+// 更换编辑菜单图标
+const selectUpdateMenuIcon = (icon: string) => {
+  updateForm.value.icon = icon;
+  iconListVisable.value = false;
+};
+
+// 点击每一行的修改按钮进行修改当前菜单 (填充原本的数据)
+const getMenuRowInfo = (row: object) => {
+  dialogUpdateTableVisible.value = true;
+  updateForm.value = row;
+  updateForm.value.cache = updateForm.value.cache === "是" ? true : false;
+  updateForm.value.hidden = updateForm.value.hidden === "是" ? true : false;
+  updateForm.value.iFrame = updateForm.value.iFrame === "是" ? true : false;
+};
+
+// 点击弹窗后修改菜单
+const submitFormAndUpdateMenu = async () => {
+  await updateMenuAPI(updateForm.value);
+  getMenuList();
+  dialogUpdateTableVisible.value = false;
+  ElMessage({ type: "success", message: "修改成功" });
+};
+
+// 保存需要删除的id
+const deleteMenuIdList = ref<Array<string>>([]);
+// 表格复选框该改变后触发的方法
+const updateMenuButtonVisable = ref<boolean>(true);
+const deleteMenuButtonVisable = ref<boolean>(true);
+const handleSelectionChange = (row: Array<object>) => {
+  deleteMenuButtonVisable.value = false;
+  if (row.length === 1) {
+    updateMenuButtonVisable.value = false;
+    // 当选中一个后,为修改菜单弹窗他赋值
+    updateForm.value = row[0];
+    updateForm.value.cache = updateForm.value.cache === "是" ? true : false;
+    updateForm.value.hidden = updateForm.value.hidden === "是" ? true : false;
+    updateForm.value.iFrame = updateForm.value.iFrame === "是" ? true : false;
+  } else {
+    // 只要不是选中一个修改按钮马上改为不可用
+    updateMenuButtonVisable.value = true;
+  }
+  // 每次复选框改变时,先清空id,防止id重复
+  deleteMenuIdList.value = [];
+  row.forEach((item: object) => {
+    deleteMenuIdList.value.push(item.id);
+  });
+};
+
+// 当复选框只选中一个后可以进行修改
+// 复选框变化后,点击删除按钮删除菜单
+const deleteMenuList = () => {
+  ElMessageBox.confirm(`此操作将删除这些菜单 , 是否继续？`, "Warning", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      await deleteMenuAPI(deleteMenuIdList.value);
+      getMenuList();
+      ElMessage({ type: "success", message: "删除成功" });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消删除",
+      });
+    });
+};
+
+// 递归获取子菜单id
+const getSubMenuIdFunction = (data: Array<object>) => {
+  if (data) {
+    data.forEach((item) => {
+      deleteMenuIdList.value.push(item.id);
+      item.children ? getSubMenuIdFunction(item.children) : null;
+    });
+  }
+};
+
+// 点击每一行的删除按钮,删除该行菜单
+const deleteMenuRowInfo = (row: object) => {
+  // 重置deleteMenuIdList的值,防止删除到被复选框选中的菜单
+  deleteMenuIdList.value = [];
+  deleteMenuIdList.value.push(row.id);
+  // 如果是高级菜单,需要得到他子菜单的id
+  getSubMenuIdFunction(row.children);
+  deleteMenuList();
 };
 </script>
 <template>
@@ -360,10 +477,22 @@ const submitFormAndAddMenu = () => {
             新增
           </el-button>
 
-          <el-button type="success" :icon="EditPen" style="font-size: 12px">
+          <el-button
+            type="success"
+            :icon="EditPen"
+            style="font-size: 12px"
+            :disabled="updateMenuButtonVisable"
+            @click="dialogUpdateTableVisible = true"
+          >
             修改
           </el-button>
-          <el-button type="danger" :icon="Delete" style="font-size: 12px">
+          <el-button
+            type="danger"
+            :icon="Delete"
+            style="font-size: 12px"
+            :disabled="deleteMenuButtonVisable"
+            @click="deleteMenuList"
+          >
             删除
           </el-button>
           <el-button type="warning" :icon="Download" style="font-size: 12px">
@@ -401,6 +530,7 @@ const submitFormAndAddMenu = () => {
           row-key="id"
           v-loading="tableLoad"
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+          @selection-change="handleSelectionChange"
         >
           <el-table-column type="selection" width="55" />
           <el-table-column prop="title" label="菜单标题" align="center" />
@@ -417,9 +547,19 @@ const submitFormAndAddMenu = () => {
           <el-table-column prop="hidden" label="可见" align="center" />
           <el-table-column prop="createTime" label="创建日期" align="center" />
           <el-table-column prop="icon" label="图标" align="center">
-            <template #default="">
-              <el-button type="warning" :icon="Edit" circle />
-              <el-button type="danger" :icon="Delete" circle />
+            <template #default="{ row }">
+              <el-button
+                type="warning"
+                :icon="Edit"
+                circle
+                @click="getMenuRowInfo(row)"
+              />
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                @click="deleteMenuRowInfo(row)"
+              />
             </template>
           </el-table-column>
         </el-table>
@@ -481,7 +621,7 @@ const submitFormAndAddMenu = () => {
             v-for="(item, index) in iconList"
             :key="index"
             class="addIcon"
-            @click="selectMenuIcon(item)"
+            @click="selectAddMenuIcon(item)"
           >
             <SvgIcon :name="item" style="display: inline" color="#a8abb2" />
             {{ item }}
@@ -499,7 +639,7 @@ const submitFormAndAddMenu = () => {
 
       <!-- 菜单缓存 -->
       <el-form-item v-if="addForm.type === 1" label="菜单缓存">
-        <el-radio-group v-model="addForm.cached">
+        <el-radio-group v-model="addForm.cache">
           <el-radio-button label="是" :value="true"></el-radio-button>
           <el-radio-button label="否" :value="false"></el-radio-button>
         </el-radio-group>
@@ -577,6 +717,166 @@ const submitFormAndAddMenu = () => {
       <div class="dialog-footer">
         <el-button @click="dialogAddTableVisible = false">取消</el-button>
         <el-button type="primary" @click="submitFormAndAddMenu">确认</el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <!-- 修改菜单弹窗 -->
+  <el-dialog
+    title="编辑菜单"
+    v-model="dialogUpdateTableVisible"
+    width="600px"
+    :close-on-click-modal="false"
+  >
+    <el-form
+      :model="updateForm"
+      label-width="100px"
+      :inline="true"
+      ref="addFomrRef"
+      :rules="rules"
+    >
+      <el-form-item label="菜单类型">
+        <el-radio-group v-model="updateForm.type">
+          <el-radio-button label="目录" :value="0"></el-radio-button>
+          <el-radio-button label="菜单" :value="1"></el-radio-button>
+          <el-radio-button label="按钮" :value="2"></el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- 菜单图标 -->
+      <el-form-item
+        v-if="updateForm.type !== 2"
+        label="菜单图标"
+        style="width: 100%"
+      >
+        <el-input
+          v-model="updateForm.icon"
+          placeholder="点击选择图标"
+          @focus="iconListVisable = true"
+        >
+          <template #prefix>
+            <SvgIcon
+              :name="updateForm.icon ? updateForm.icon : 'search'"
+              color="#a8abb2"
+              width="10px"
+              height="10px"
+            />
+          </template>
+        </el-input>
+        <el-scrollbar
+          style="
+            max-height: 300px;
+            margin-top: 10px;
+            width: 100%;
+            border: 1px solid #a8abb2;
+            border-radius: 5px;
+          "
+          v-if="iconListVisable"
+        >
+          <span
+            v-for="(item, index) in iconList"
+            :key="index"
+            class="addIcon"
+            @click="selectUpdateMenuIcon(item)"
+          >
+            <SvgIcon :name="item" style="display: inline" color="#a8abb2" />
+            {{ item }}
+          </span>
+        </el-scrollbar>
+      </el-form-item>
+
+      <!-- 外链菜单 -->
+      <el-form-item v-if="updateForm.type !== 2" label="外链菜单">
+        <el-radio-group v-model="updateForm.iFrame">
+          <el-radio-button label="是" :value="true"></el-radio-button>
+          <el-radio-button label="否" :value="false"></el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- 菜单缓存 -->
+      <el-form-item v-if="updateForm.type === 1" label="菜单缓存">
+        <el-radio-group v-model="updateForm.cache">
+          <el-radio-button label="是" :value="true"></el-radio-button>
+          <el-radio-button label="否" :value="false"></el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- 菜单可见 -->
+      <el-form-item v-if="updateForm.type !== 2" label="菜单可见">
+        <el-radio-group v-model="updateForm.hidden">
+          <el-radio-button label="是" :value="true"></el-radio-button>
+          <el-radio-button label="否" :value="false"></el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- 菜单标题 -->
+      <el-form-item label="菜单标题" style="width: 100%" prop="title">
+        <el-input v-model="updateForm.title" placeholder="菜单标题"></el-input>
+      </el-form-item>
+
+      <!-- 权限标识 -->
+      <el-form-item v-if="updateForm.type !== 0" label="权限标识">
+        <el-input
+          v-model="updateForm.permission"
+          placeholder="权限标识"
+        ></el-input>
+      </el-form-item>
+
+      <!-- 路由地址 -->
+      <el-form-item
+        v-if="updateForm.type !== 2"
+        label="路由地址"
+        prop="path"
+        style="width: 44%"
+      >
+        <el-input v-model="updateForm.path" placeholder="路由地址"></el-input>
+      </el-form-item>
+
+      <!-- 组件名称 -->
+      <el-form-item v-if="updateForm.type === 1" label="组件名称">
+        <el-input
+          v-model="updateForm.name"
+          placeholder="匹配组件内Name字段"
+        ></el-input>
+      </el-form-item>
+
+      <!-- 组件路径 -->
+      <el-form-item v-if="updateForm.type === 1" label="组件路径">
+        <el-input
+          v-model="updateForm.component"
+          placeholder="组件路径"
+        ></el-input>
+      </el-form-item>
+
+      <!-- 菜单排序 -->
+      <el-form-item label="菜单排序">
+        <el-input-number
+          v-model="updateForm.menuSort"
+          :min="1"
+          controls-position="right"
+        ></el-input-number>
+      </el-form-item>
+
+      <!-- 上级类别 -->
+      <el-form-item label="上级类别" style="width: 100%">
+        <el-tree-select
+          v-model="updateForm.pid"
+          :data="menuTreeData"
+          filterable
+          style="width: 240px"
+          :render-after-expand="false"
+          check-strictly
+          :props="{ label: 'label', value: 'id', children: 'children' }"
+          placeholder="选择上级类目"
+        />
+      </el-form-item>
+    </el-form>
+
+    <template v-slot:footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogUpdateTableVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitFormAndUpdateMenu">
+          确认
+        </el-button>
       </div>
     </template>
   </el-dialog>

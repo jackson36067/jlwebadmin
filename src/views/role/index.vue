@@ -300,7 +300,6 @@ const handleSelectionChange = (val: Array<object>) => {
   val.forEach((item) => {
     deleteRoleIds.value.push(item.id);
   });
-  console.log(deleteRoleIds.value);
 };
 
 // 修改角色前的数据准备
