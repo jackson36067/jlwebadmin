@@ -78,6 +78,7 @@ export const exportRoleDataAPI = () => {
   return httpInstance({
     method: "post",
     url: "role/export",
+    responseType: "blob",
   });
 };
 

@@ -39,10 +39,26 @@ export const updateMenuAPI = (data: object) => {
   });
 };
 
+/**
+ * 根据ids批量删除菜单
+ * @param data
+ * @returns
+ */
 export const deleteMenuAPI = (data: Array<string>) => {
   return httpInstance({
     method: "delete",
     url: "menu/delete",
     data,
+  });
+};
+
+/**
+ * 导出菜单数据
+ */
+export const exportMenuDataAPI = () => {
+  return httpInstance({
+    method: "get",
+    url: "menu/export",
+    responseType: "blob",
   });
 };

@@ -2,11 +2,16 @@
 import {
   addMenuAPI,
   deleteMenuAPI,
+  exportMenuDataAPI,
   getMenuListAPI,
   updateMenuAPI,
 } from "@/apis/menu";
 import SvgIcon from "@/components/svg/svgIcon.vue";
-import { formatDateForBackend, formatLocalDateTime } from "@/utils/dateFormat";
+import {
+  formatDateForBackend,
+  formatDateToString,
+  formatLocalDateTime,
+} from "@/utils/dateFormat";
 import {
   Delete,
   Download,
@@ -417,6 +422,36 @@ const deleteMenuRowInfo = (row: object) => {
   getSubMenuIdFunction(row.children);
   deleteMenuList();
 };
+
+// 导出菜单数据
+const exportMenuData = async () => {
+  await exportMenuDataAPI()
+    .then((data) => {
+      // console.log(data);
+      if (!data) {
+        return;
+      }
+      const url = window.URL.createObjectURL(
+        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+      );
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = url;
+      // 设置年份
+      const date = new Date();
+      const dateFormat = formatDateToString(date);
+      // 下载文件
+      link.setAttribute("download", `${dateFormat}菜单数据` + ".xlsx");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link); //下载完成移除元素
+      window.URL.revokeObjectURL(url); //释放掉blob对象
+      ElMessage({ type: "success", message: "导出成功" });
+    })
+    .catch((error) => {
+      console.error("下载错误:", error);
+    });
+};
 </script>
 <template>
   <div class="body" :class="{ left: collapse }">
@@ -495,7 +530,12 @@ const deleteMenuRowInfo = (row: object) => {
           >
             删除
           </el-button>
-          <el-button type="warning" :icon="Download" style="font-size: 12px">
+          <el-button
+            type="warning"
+            :icon="Download"
+            style="font-size: 12px"
+            @click="exportMenuData"
+          >
             导出
           </el-button>
         </div>
