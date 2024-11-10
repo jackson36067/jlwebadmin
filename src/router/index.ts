@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "@/views/login/index.vue";
 import layout from "@/views/layout/index.vue";
-import homeView from "@/views/home/homeView.vue";
-import usreView from "@/views/user/index.vue";
-import roleView from "@/views/role/index.vue";
-import menuView from "@/views/menu/index.vue";
-import deptView from "@/views/dept/index.vue";
+import homeView from "@/views/system/home/homeView.vue";
+import usreView from "@/views/system/user/index.vue";
+import roleView from "@/views/system/role/index.vue";
+import menuView from "@/views/system/menu/index.vue";
+import deptView from "@/views/system/dept/index.vue";
 import { useLoginStore } from "@/stores/LoginStore";
 
 const router = createRouter({
