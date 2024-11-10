@@ -55,8 +55,8 @@ const form = ref({
 const queryParams = computed(() => ({
   page: 1,
   pageSize: 10,
-  usernameOrEmail: form.value.usernameOrEmail,
-  enabled: form.value.enabled,
+  usernameOrEmail: form.value.usernameOrEmail || null,
+  enabled: form.value.enabled || null,
   begin: formatDateForBackend(form.value.createTime[0]) || null, // 默认值为 null
   end: formatDateForBackend(form.value.createTime[1]) || null, // 默认值为 null
 }));

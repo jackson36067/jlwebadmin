@@ -81,7 +81,7 @@ const formatMenuTreeData = (data: Array<object>) => {
 
 // 查询参数对象
 const queryParams = computed(() => ({
-  title: form.value.title,
+  title: form.value.title || null,
   begin: formatDateForBackend(form.value.createTime[0]) || null, // 默认值为 null
   end: formatDateForBackend(form.value.createTime[1]) || null, // 默认值为 null
 }));
@@ -100,13 +100,6 @@ onMounted(() => {
 
 // 根据参数获取对象
 const doQueryMenuList = () => {
-  if (form.value.title) {
-    queryParams.value.title = form.value.title;
-  }
-  if (form.value.createTime) {
-    queryParams.value.begin = formatDateForBackend(form.value.createTime[0]);
-    queryParams.value.end = formatDateForBackend(form.value.createTime[1]);
-  }
   tableLoad.value = true;
   setTimeout(() => {
     getMenuList();
@@ -366,11 +359,6 @@ const handleSelectionChange = (row: Array<object>) => {
   deleteMenuButtonVisable.value = false;
   if (row.length === 1) {
     updateMenuButtonVisable.value = false;
-    // 当选中一个后,为修改菜单弹窗他赋值
-    updateForm.value = row[0];
-    updateForm.value.cache = updateForm.value.cache === "是" ? true : false;
-    updateForm.value.hidden = updateForm.value.hidden === "是" ? true : false;
-    updateForm.value.iFrame = updateForm.value.iFrame === "是" ? true : false;
   } else {
     // 只要不是选中一个修改按钮马上改为不可用
     updateMenuButtonVisable.value = true;
@@ -586,7 +574,7 @@ const exportMenuData = async () => {
           <el-table-column prop="cache" label="缓存" align="center" />
           <el-table-column prop="hidden" label="可见" align="center" />
           <el-table-column prop="createTime" label="创建日期" align="center" />
-          <el-table-column prop="icon" label="图标" align="center">
+          <el-table-column label="操作" align="center">
             <template #default="{ row }">
               <el-button
                 type="warning"

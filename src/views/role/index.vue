@@ -43,7 +43,7 @@ const form = ref({
 const queryParams = computed(() => ({
   page: 1,
   pageSize: 10,
-  nameOrDescription: form.value.nameOrDescription,
+  nameOrDescription: form.value.nameOrDescription || null,
   begin: formatDateForBackend(form.value.createTime[0]) || null, // 默认值为 null
   end: formatDateForBackend(form.value.createTime[1]) || null, // 默认值为 null
 }));
