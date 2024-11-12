@@ -2,6 +2,7 @@
 import svgIcon from "@/components/svg/svgIcon.vue";
 import { inject, onMounted, ref } from "vue";
 import * as echarts from "echarts";
+import { useTransition } from "@vueuse/core";
 // import { makeBackground } from "echarts/types/src/component/helper/listComponent.js";
 
 // 是否折叠左侧菜单
@@ -379,6 +380,30 @@ onMounted(() => {
 //     LineChart.dispose();
 //   }
 // });
+
+const visitValue = ref(0);
+const visitOutputValue = useTransition(visitValue, {
+  duration: 1500,
+});
+visitValue.value = 102400;
+
+const messageValue = ref(0);
+const messageOutputValue = useTransition(messageValue, {
+  duration: 1500,
+});
+messageValue.value = 81212;
+
+const purchasesValue = ref(0);
+const purchaseOutputValue = useTransition(purchasesValue, {
+  duration: 1500,
+});
+purchasesValue.value = 9280;
+
+const shoppingValue = ref(0);
+const shoppingOutputValue = useTransition(shoppingValue, {
+  duration: 1500,
+});
+shoppingValue.value = 13600;
 </script>
 <template>
   <div class="body" :class="{ left: isCollapse }">
@@ -402,7 +427,15 @@ onMounted(() => {
           </div>
           <div class="panel-description">
             <span class="panel-text">New Visits</span>
-            <span class="panel-num">102,400</span>
+            <span class="panel-num"
+              ><el-statistic
+                :value-style="{
+                  color: '#666',
+                  fontSize: '20px',
+                  fontWeight: 700,
+                }"
+                :value="visitOutputValue"
+            /></span>
           </div>
         </div>
         <div
@@ -423,7 +456,16 @@ onMounted(() => {
           </div>
           <div class="panel-description">
             <span class="panel-text">Messages</span>
-            <span class="panel-num">81,212</span>
+            <span class="panel-num">
+              <el-statistic
+                :value-style="{
+                  color: '#666',
+                  fontSize: '20px',
+                  fontWeight: 700,
+                }"
+                :value="messageOutputValue"
+              />
+            </span>
           </div>
         </div>
         <div
@@ -444,7 +486,16 @@ onMounted(() => {
           </div>
           <div class="panel-description">
             <span class="panel-text">Purchases</span>
-            <span class="panel-num">9,280</span>
+            <span class="panel-num">
+              <el-statistic
+                :value-style="{
+                  color: '#666',
+                  fontSize: '20px',
+                  fontWeight: 700,
+                }"
+                :value="purchaseOutputValue"
+              />
+            </span>
           </div>
         </div>
         <div
@@ -465,7 +516,15 @@ onMounted(() => {
           </div>
           <div class="panel-description">
             <span class="panel-text">Shoppings</span>
-            <span class="panel-num">13,600</span>
+            <span class="panel-num"
+              ><el-statistic
+                :value-style="{
+                  color: '#666',
+                  fontSize: '20px',
+                  fontWeight: 700,
+                }"
+                :value="shoppingOutputValue"
+            /></span>
           </div>
         </div>
       </div>

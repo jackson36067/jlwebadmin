@@ -37,7 +37,6 @@ httpInstance.interceptors.response.use(
     if (headers["code"] != null) {
       captcha.value = headers["code"];
     }
-
     return config.data;
   },
   (error) => {

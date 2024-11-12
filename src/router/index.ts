@@ -6,6 +6,7 @@ import usreView from "@/views/system/user/index.vue";
 import roleView from "@/views/system/role/index.vue";
 import menuView from "@/views/system/menu/index.vue";
 import deptView from "@/views/system/dept/index.vue";
+import timingView from "@/views/system/timing/index.vue";
 import { useLoginStore } from "@/stores/LoginStore";
 
 const router = createRouter({
@@ -35,6 +36,10 @@ const router = createRouter({
         {
           path: "/dept",
           component: deptView,
+        },
+        {
+          path: "timing",
+          component: timingView,
         },
       ],
     },
