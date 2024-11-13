@@ -89,3 +89,15 @@ export const deleteTaskAPI = (data: Array<object>) => {
     data,
   });
 };
+
+/**
+ * 导出任务数据
+ * @returns
+ */
+export const exportTaskDataAPI = () => {
+  return httpInstance({
+    method: "get",
+    url: "quartz/export",
+    responseType: "blob",
+  });
+};

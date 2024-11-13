@@ -1,14 +1,20 @@
 <script setup lang="ts">
+import { exportTaskLogDataAPI, getTaskLogListAPI } from "@/apis/taskLog";
 import {
   addTaskAPI,
   deleteTaskAPI,
+  exportTaskDataAPI,
   getTaskInfoByIdAPI,
   getTaskListAPI,
   pauseTaskAPI,
   resumeTaskAPI,
   updateTaskAPI,
 } from "@/apis/timgin";
-import { formatDateForBackend, formatLocalDateTime } from "@/utils/dateFormat";
+import {
+  formatDateForBackend,
+  formatDateToString,
+  formatLocalDateTime,
+} from "@/utils/dateFormat";
 import {
   Delete,
   EditPen,
@@ -19,6 +25,7 @@ import {
   Download,
 } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { M } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 import { computed, inject, onMounted, ref } from "vue";
 
 const isCollapse = inject("isCollapse");
@@ -65,8 +72,8 @@ const shortcuts = [
 ];
 
 const queryParams = computed(() => ({
-  page: "1",
-  pageSize: "10",
+  page: 1,
+  pageSize: 10,
   jobName: form.value.jobName,
   begin: formatDateForBackend(form.value.createTime[0]) || null,
   end: formatDateForBackend(form.value.createTime[1]) || null,
@@ -286,15 +293,146 @@ const elbox = (str: string) => {
       });
     });
 };
+// 删除任务
 const deleteTask = async () => {
   elbox("这些");
 };
-
+// 删除行任务
 const deleteTaskRowInfo = (row) => {
   deleteTaskList.value = [];
   const { id, jobName, jobGroup } = row;
   deleteTaskList.value.push({ id, jobName, jobGroup });
   elbox(row.jobName);
+};
+
+// 日志对话框可见性
+const dialogLogTableVisible = ref(false);
+
+// 日志列表数据
+
+// 查询任务日志参数对象
+const logForm = ref({
+  jobName: "",
+  createTime: "",
+  isSuccess: "",
+});
+const logQueryParams = computed(() => ({
+  page: 1,
+  pageSize: 6,
+  jobName: logForm.value.jobName,
+  begin: formatDateForBackend(logForm.value.createTime[0]) || null,
+  end: formatDateForBackend(logForm.value.createTime[1]) || null,
+}));
+
+const taskLogList = ref([]);
+const logTotal = ref(1);
+const getTaskLogList = async () => {
+  const res = await getTaskLogListAPI(logQueryParams.value);
+  console.log(res.data.list);
+  res.data.list.forEach((item) => {
+    item.createTime = formatLocalDateTime(item.createTime);
+  });
+  taskLogList.value = res.data.list;
+  logTotal.value = res.data.total;
+};
+const logLoading = ref(false);
+
+// 点击日志加载日志信息
+const dialogLog = () => {
+  dialogLogTableVisible.value = true;
+  logLoading.value = true;
+  setTimeout(() => {
+    getTaskLogList();
+    logLoading.value = false;
+  }, 1000);
+};
+
+const handleLogCurrentChange = () => {
+  getTaskLogList();
+};
+
+// 点击搜索,根据条件搜索任务日志
+const queryTaskLogListWithParams = () => {
+  logLoading.value = true;
+  setTimeout(() => {
+    getTaskLogList();
+    logLoading.value = false;
+  }, 1000);
+};
+
+// 点击重置,重置条件重新获取日志
+const logResetFields = () => {
+  logForm.value.jobName = "";
+  logForm.value.createTime = "";
+  logForm.value.isSuccess = "";
+};
+const doLogReset = () => {
+  logResetFields();
+  logLoading.value = true;
+  setTimeout(() => {
+    getTaskLogList();
+    logLoading.value = false;
+  }, 1000);
+};
+
+// 导出任务数据
+const exportTaskData = async () => {
+  await exportTaskDataAPI()
+    .then((data) => {
+      if (!data) {
+        return;
+      }
+      const url = window.URL.createObjectURL(
+        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+      );
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = url;
+      // 设置年份
+      const date = new Date();
+      const dateFormat = formatDateToString(date);
+      // 下载文件
+      link.setAttribute("download", `${dateFormat}定时任务数据` + ".xlsx");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link); //下载完成移除元素
+      window.URL.revokeObjectURL(url); //释放掉blob对象
+      ElMessage({ type: "success", message: "导出成功" });
+    })
+    .catch((error) => {
+      console.error("下载错误", error);
+      ElMessage({ type: "error", message: "导出失败" });
+    });
+};
+
+// 导出任务日志数据
+const exportTaskLogData = async () => {
+  await exportTaskLogDataAPI()
+    .then((data) => {
+      if (!data) {
+        return;
+      }
+      const url = window.URL.createObjectURL(
+        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+      );
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = url;
+      // 设置年份
+      const date = new Date();
+      const dateFormat = formatDateToString(date);
+      // 下载文件
+      link.setAttribute("download", `${dateFormat}任务日志数据` + ".xlsx");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link); //下载完成移除元素
+      window.URL.revokeObjectURL(url); //释放掉blob对象
+      ElMessage({ type: "success", message: "导出成功" });
+    })
+    .catch((error) => {
+      console.error("下载错误", error);
+      ElMessage({ type: "error", message: "导出失败" });
+    });
 };
 </script>
 <template>
@@ -374,10 +512,20 @@ const deleteTaskRowInfo = (row) => {
           >
             删除
           </el-button>
-          <el-button type="warning" :icon="Download" style="font-size: 12px">
+          <el-button
+            type="warning"
+            :icon="Download"
+            style="font-size: 12px"
+            @click="exportTaskData"
+          >
             导出
           </el-button>
-          <el-button type="info" :icon="Document" style="font-size: 12px">
+          <el-button
+            type="info"
+            :icon="Document"
+            style="font-size: 12px"
+            @click="dialogLog"
+          >
             日志
           </el-button>
         </div>
@@ -400,7 +548,7 @@ const deleteTaskRowInfo = (row) => {
           </span>
         </div>
       </div>
-      <div class="table" style="margin-top: 30px">
+      <div class="table">
         <el-table
           :data="taskList"
           style="width: 100%"
@@ -452,7 +600,7 @@ const deleteTaskRowInfo = (row) => {
             <template #default="{ row }">
               <el-button
                 disabled="true"
-                style="background-color: #fdf6ec; color: #e7a753"
+                :class="{ pause: row.isPause, resume: !row.isPause }"
                 >{{ row.isPause ? "已暂停" : "执行中" }}</el-button
               >
             </template>
@@ -627,6 +775,151 @@ const deleteTaskRowInfo = (row) => {
       </el-form-item>
     </el-form>
   </el-dialog>
+
+  <!-- 点击日志弹窗 -->
+  <el-dialog
+    v-model="dialogLogTableVisible"
+    title="执行日志"
+    width="1640"
+    :destroy-on-close="true"
+    :modal="true"
+  >
+    <div class="query" v-if="showQuery">
+      <el-form
+        :model="form"
+        style="max-width: 100%"
+        :resetFields="logResetFields"
+      >
+        <el-form-item class="form-item">
+          <el-input
+            v-model="logForm.jobName"
+            placeholder="输入任务名称搜索"
+            style="width: 210px"
+          />
+        </el-form-item>
+        <el-form-item style="margin: 0 10px" class="form-item">
+          <div class="demo-date-picker">
+            <div class="block">
+              <el-date-picker
+                v-model="logForm.createTime"
+                type="daterange"
+                unlink-panels
+                range-separator=":"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                :shortcuts="shortcuts"
+                style="width: 200px"
+              />
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item class="form-item">
+          <el-select
+            v-model="logForm.isSuccess"
+            placeholder="日志状态"
+            style="width: 120px"
+          >
+            <el-option label="成功" :value="true" />
+            <el-option label="失败" :value="false" />
+          </el-select>
+        </el-form-item>
+        <el-form-item class="form-item">
+          <el-button
+            :icon="Search"
+            style="margin: 0 10px"
+            type="success"
+            @click="queryTaskLogListWithParams"
+          >
+            搜索
+          </el-button>
+        </el-form-item>
+        <el-form-item class="form-item">
+          <el-button :icon="RefreshRight" type="warning" @click="doLogReset"
+            >重置</el-button
+          >
+        </el-form-item>
+        <el-form-item class="form-item">
+          <el-button
+            :icon="Download"
+            style="
+              background-color: #000;
+              color: #fff;
+              font-size: 12px;
+              margin-left: 10px;
+              border: 1px #000 solid;
+            "
+            @click="exportTaskLogData"
+          >
+            导出
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="table">
+      <el-table
+        :data="taskLogList"
+        style="width: 100%"
+        show-overflow-tooltip
+        stripe
+        v-loading="logLoading"
+      >
+        <el-table-column
+          fixed
+          prop="jobName"
+          label="任务名称"
+          width="150"
+          align="center"
+        />
+        <el-table-column
+          prop="className"
+          label="class名称"
+          width="150"
+          align="center"
+        />
+        <el-table-column
+          prop="cronExpression"
+          label="cron表达式"
+          width="160"
+          align="center"
+        />
+        <el-table-column
+          prop="exceptionDetail"
+          label="异常详情"
+          width="160"
+          align="center"
+        />
+        <el-table-column prop="time" label="耗时" width="160" align="center" />
+        <el-table-column
+          prop="isSuccess"
+          label="状态"
+          min-width="100"
+          align="center"
+        >
+          <template #default="{ row }">
+            <el-button
+              disabled="true"
+              :class="{ error: !row.isSuccess, resume: row.isSuccess }"
+              >{{ row.isSuccess ? "成功" : "失败" }}</el-button
+            >
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="createTime"
+          label="创建时间"
+          width="200"
+          align="center"
+        />
+      </el-table>
+      <el-pagination
+        style="margin-top: 20px"
+        v-model:page-size="logQueryParams.pageSize"
+        layout="total, prev, pager, next"
+        :total="logTotal"
+        v-model:current-page="logQueryParams.page"
+        @current-change="handleLogCurrentChange"
+      />
+    </div>
+  </el-dialog>
 </template>
 <style scoped lang="scss">
 .boby {
@@ -639,64 +932,68 @@ const deleteTaskRowInfo = (row) => {
   .main {
     display: flex;
     flex-direction: row;
-    .dept {
-      flex: 1;
-      .tree {
-        width: 100%;
+    .button {
+      .operate {
+        float: left;
       }
-    }
-    .user {
-      display: flex;
-      flex-direction: column;
-      flex: 5;
-      margin-left: 40px;
-      .query {
-        display: block;
-        .form-item {
-          float: left;
-        }
-      }
-      .button {
-        .operate {
-          float: left;
-        }
-        .box {
-          box-sizing: border-box;
-          display: flex;
-          width: 134px;
-          height: 29px;
-          float: right;
-          border: 1px solid #c0c4cc;
-          cursor: pointer;
-          span {
-            flex: 1;
-            text-align: center;
-            line-height: 29px;
-            &:nth-child(n + 2) {
-              border-left: 1px solid #c0c4cc;
-            }
-            &:first-child {
-              background-color: #f4f4f5;
-            }
-            &:first-child :hover {
-              background-color: #909399;
-            }
-            &:first-child :hover .svg-icon {
-              color: #fff;
-            }
-            &:nth-child(n + 2):hover {
-              background-color: #e9e9e9;
-            }
-            .changeColor {
-              color: #fff;
-            }
+      .box {
+        box-sizing: border-box;
+        display: flex;
+        width: 134px;
+        height: 29px;
+        float: right;
+        border: 1px solid #c0c4cc;
+        cursor: pointer;
+        span {
+          flex: 1;
+          text-align: center;
+          line-height: 29px;
+          &:nth-child(n + 2) {
+            border-left: 1px solid #c0c4cc;
           }
-          .changeBGC {
+          &:first-child {
+            background-color: #f4f4f5;
+          }
+          &:first-child :hover {
             background-color: #909399;
           }
+          &:first-child :hover .svg-icon {
+            color: #fff;
+          }
+          &:nth-child(n + 2):hover {
+            background-color: #e9e9e9;
+          }
+          .changeColor {
+            color: #fff;
+          }
+        }
+        .changeBGC {
+          background-color: #909399;
         }
       }
     }
+  }
+}
+.table {
+  margin-top: 30px;
+  .pause {
+    color: #e7a753;
+    background-color: #fdf6ec;
+  }
+  .resume {
+    background-color: #f0f9eb;
+    color: #74c550;
+  }
+  .error {
+    background-color: #fef0f0;
+    color: #f69896;
+  }
+}
+
+.query {
+  display: block;
+  .form-item {
+    float: left;
   }
 }
 .left {
