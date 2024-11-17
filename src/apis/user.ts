@@ -90,9 +90,51 @@ export const exportUserInfoAPI = () => {
   });
 };
 
+/**
+ * 退出登录
+ * @returns
+ */
 export const logoutAPI = () => {
   return httpInstance({
     method: "post",
     url: "user/logout",
+  });
+};
+
+/**
+ * 获取在线用户列表
+ * @param params
+ * @returns
+ */
+export const getOnlineUserAPI = (params: object) => {
+  return httpInstance({
+    method: "get",
+    url: "user/online",
+    params,
+  });
+};
+
+/**
+ * 强制退出用户账号功能
+ * @param data 用户名数组
+ * @returns
+ */
+export const forceWithdrawUserAPI = (data: Array<string>) => {
+  return httpInstance({
+    method: "post",
+    url: "user/force",
+    data,
+  });
+};
+
+/**
+ * 导出在线用户数据
+ * @returns
+ */
+export const exportOnlineUserInfoAPI = () => {
+  return httpInstance({
+    method: "get",
+    url: "user/online/export",
+    responseType: "blob",
   });
 };

@@ -45,7 +45,7 @@ httpInstance.interceptors.response.use(
       loginStore.clearLoginData();
       router.push("/login");
     }
-    const errorMsg: string = error.response.data || "请求失败";
+    const errorMsg: string = error.response.data.msg || "请求失败";
     ElMessage({ type: "warning", message: errorMsg });
     return Promise.reject(error);
   }
