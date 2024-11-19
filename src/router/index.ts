@@ -8,6 +8,7 @@ import menuView from "@/views/system/menu/index.vue";
 import deptView from "@/views/system/dept/index.vue";
 import timingView from "@/views/system/timing/index.vue";
 import onlineView from "@/views/monitor/online/index.vue";
+import logView from "@/views/monitor/log/index.vue";
 import { useLoginStore } from "@/stores/LoginStore";
 
 const router = createRouter({
@@ -45,6 +46,10 @@ const router = createRouter({
         {
           path: "online",
           component: onlineView,
+        },
+        {
+          path: "logs",
+          component: logView,
         },
       ],
     },
