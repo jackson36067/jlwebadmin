@@ -5,12 +5,17 @@ import avatar from "@/assets/images/avatar.png";
 import router from "@/router";
 import { logoutAPI } from "@/apis/user";
 import { useLoginStore } from "@/stores/LoginStore";
+import { useBreadcrumbStore } from "@/stores/BreadcrumbStore";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 const isCollapse = inject("isCollapse", ref(false));
 const doCollapse = () => {
   isCollapse.value = !isCollapse.value;
 };
+
+// 获取面包屑
+const breadcrumbStore = useBreadcrumbStore();
+
 const input = ref("");
 // 是否隐藏查询表单变量
 const isOpacity = ref("0");
@@ -89,6 +94,13 @@ const logout = async () => {
       });
     });
 };
+
+// 点击头像下拉菜单布局设置后的抽屉可见性
+const drawer = ref(false);
+
+// 抽屉中tag以及logo是否可见性
+const isShowLogo = inject("isShowLogo", ref(true));
+const isShowTag = inject("isShowTag", ref(true));
 </script>
 <template>
   <div class="header" :class="{ left: isCollapse }">
@@ -96,7 +108,19 @@ const logout = async () => {
       <a href="#" @click="doCollapse">
         <svgIcon name="list" class="svg-icon" width="30px" height="20px" />
       </a>
-      <span>首页</span>
+      <span>
+        <el-breadcrumb separator="/" style="color: #afbccd">
+          <el-breadcrumb-item>首页</el-breadcrumb-item>
+          <template v-if="breadcrumbStore.breadcrumbs.length > 1">
+            <el-breadcrumb-item
+              v-for="(item, index) in breadcrumbStore.breadcrumbs"
+              :key="index"
+            >
+              {{ item.title }}
+            </el-breadcrumb-item>
+          </template>
+        </el-breadcrumb>
+      </span>
     </div>
     <div class="user">
       <a href="#" v-if="isShow">
@@ -192,7 +216,9 @@ const logout = async () => {
           <img :src="avatar" alt="" class="img" />
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>布局设置</el-dropdown-item>
+              <el-dropdown-item @click="drawer = true"
+                >布局设置</el-dropdown-item
+              >
               <el-dropdown-item>个人中心</el-dropdown-item>
               <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -201,6 +227,31 @@ const logout = async () => {
       </a>
     </div>
   </div>
+  <el-drawer
+    v-model="drawer"
+    size="260px"
+    class="custom-drawer"
+    destroy-on-close
+    :show-close="false"
+  >
+    <div class="title">系统布局设置</div>
+    <div class="switch">
+      <span>显示标签</span>
+      <el-switch
+        v-model="isShowTag"
+        active-color="#212121"
+        inactive-color="#dcdfe6"
+      />
+    </div>
+    <div class="switch">
+      <span>显示LOGO</span>
+      <el-switch
+        v-model="isShowLogo"
+        :active-color="'#212121'"
+        :inactive-color="'#dcdfe6'"
+      />
+    </div>
+  </el-drawer>
 </template>
 <style lang="scss">
 .header {
@@ -270,8 +321,43 @@ const logout = async () => {
   min-width: 60px !important;
   width: 80px !important;
 }
+
 .left {
   left: 59px;
   width: calc(100% - 59px);
+}
+
+.el-drawer__header {
+  padding: 0; /* 移除标题的内边距 */
+  margin: 0; /* 移除多余的外边距 */
+}
+.custom-drawer {
+  .title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2e2e2e;
+    margin-top: 20px;
+    padding: 0;
+    text-align: left;
+  }
+  .switch {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    span {
+      color: #6a6a6a;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 32px; // switch的高为32px,让文字垂直居中显示
+    }
+    &:first-child {
+      margin-top: 0;
+    }
+    /* 激活时的背景颜色 */
+    .el-switch.is-checked .el-switch__core {
+      background-color: #212121 !important; /* 激活时的背景颜色 */
+      border: none;
+    }
+  }
 }
 </style>

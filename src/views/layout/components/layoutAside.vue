@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import logo from "@/assets/images/logo.png";
-import { provide, ref, inject, watch } from "vue";
+import { ref, inject } from "vue";
 import { useLoginStore } from "@/stores/LoginStore";
 import svgIcon from "@/components/svg/svgIcon.vue";
+import { useTagsStore } from "@/stores/TagStore";
+import { useBreadcrumbStore } from "@/stores/BreadcrumbStore";
+import { useDefaultActiveMenuStore } from "@/stores/DefaultActiveMenuStore";
 import router from "@/router";
 
 const loginStore = useLoginStore();
 const isCollapse = inject("isCollapse", ref(false));
+
+const defaultActiveMenuStore = useDefaultActiveMenuStore();
 const menuList: object = loginStore.userInfo.menuVOList;
-const menuActive = ref("/");
+
 const menuSellect = (index: string) => {
-  menuActive.value = index;
+  defaultActiveMenuStore.menuActive = index;
 };
 const menuOpen = () => {
   // isCollapse.value = false;
@@ -25,9 +30,21 @@ const mainClick = () => {
 };
 
 // 点击子菜单跳转页面
-const menuClick = (path: string) => {
+const tagsStore = useTagsStore();
+const breadcrumbStore = useBreadcrumbStore();
+const menuClick = (menu: object, submenu: object) => {
   // console.log(key);
-  router.push(`/${path}`);
+  // router.push(submenu.path);
+  // 新增标签
+  const title = menu.title;
+  const { path, name } = submenu;
+  const subtitle = submenu.title;
+  tagsStore.addView({ path, title, name, subtitle });
+  // 修改面包屑
+  breadcrumbStore.updateBreadcrumbs([
+    { title: menu.title },
+    { title: submenu.title },
+  ]);
 };
 
 // 监测页面宽度大小,一定程度时把菜单折叠起来
@@ -39,10 +56,13 @@ mediaQueryList.addEventListener("change", (event) => {
     isCollapse.value = false;
   }
 });
+
+// 获取是否展示logo
+const isShowLogo = inject("isShowLogo", ref(true));
 </script>
 <template>
   <div class="content">
-    <div class="logo">
+    <div class="logo" v-if="isShowLogo">
       <a href="#" class="a" :class="{ updateWidth: isCollapse }">
         <img :src="logo" alt="" />
         <h5 v-if="!isCollapse">jackson-后台管理</h5>
@@ -51,7 +71,7 @@ mediaQueryList.addEventListener("change", (event) => {
     <div class="menu">
       <el-menu
         mode="vertical"
-        :default-active="menuActive"
+        :default-active="defaultActiveMenuStore.menuActive"
         class="el-menu-vertical-demo"
         :collapse="isCollapse"
         text-color="rgb(191, 203, 217)"
@@ -62,6 +82,7 @@ mediaQueryList.addEventListener("change", (event) => {
         @open="menuOpen"
         @close="menuClose"
         hide-timeout="0.3s"
+        router
       >
         <el-menu-item index="/" @click="mainClick">
           <svg-icon name="index" class="svg-icon"></svg-icon>
@@ -74,11 +95,11 @@ mediaQueryList.addEventListener("change", (event) => {
           </template>
 
           <el-menu-item
-            :index="submenu.component"
+            :index="submenu.path"
             v-for="submenu in menu.subMenuVOList"
             :key="submenu.pid"
             class="el-menu-item"
-            @click="menuClick(submenu.path)"
+            @click="menuClick(menu, submenu)"
           >
             <svg-icon
               :name="submenu.icon"

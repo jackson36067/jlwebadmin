@@ -7,7 +7,7 @@ import "element-plus/theme-chalk/el-message.css";
 import router from "@/router";
 import svgIcon from "@/components/svg/svgIcon.vue";
 import { getCodeAPI } from "@/apis/login";
-import { error } from "console";
+import { useDefaultActiveMenuStore } from "@/stores/DefaultActiveMenuStore";
 const loginForm = ref({
   username: "admin",
   password: "123456",
@@ -25,6 +25,8 @@ const loginStore = useLoginStore();
 
 const loading = ref(false);
 
+const defaultActiveMenuStore = useDefaultActiveMenuStore();
+
 // 登录函数
 const login = async () => {
   const { username, password, code } = loginForm.value;
@@ -41,7 +43,7 @@ const login = async () => {
   // 登录按钮键显示加载
   loading.value = true;
   setTimeout(() => {
-    router.push("/");
+    router.push(defaultActiveMenuStore.menuActive);
   }, 500);
 };
 

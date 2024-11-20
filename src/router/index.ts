@@ -21,41 +21,49 @@ const router = createRouter({
         {
           path: "",
           component: homeView,
-          meta: { requiresAuth: true },
+          meta: { requiresAuth: true, transitionName: "slide" },
         },
         {
-          path: "/user",
+          path: "user",
           component: usreView,
+          meta: { transitionName: "fade" },
         },
         {
-          path: "/role",
+          path: "role",
           component: roleView,
+          meta: { transitionName: "fade" },
         },
         {
-          path: "/menu",
+          path: "menu",
           component: menuView,
+          meta: { transitionName: "fade" },
         },
         {
-          path: "/dept",
+          path: "dept",
           component: deptView,
+          meta: { transitionName: "fade" },
         },
         {
           path: "timing",
           component: timingView,
+          meta: { transitionName: "fade" },
         },
         {
           path: "online",
           component: onlineView,
+          meta: { transitionName: "fade" },
         },
         {
           path: "logs",
           component: logView,
+          meta: { transitionName: "fade" },
         },
       ],
     },
     {
       path: "/login",
       component: LoginView,
+      meta: { transitionName: "fade" },
     },
   ],
 });
