@@ -73,6 +73,7 @@ const isShowTag = inject("isShowTag", ref(true));
   height: 30px;
   box-shadow: 0 2px #dadcdf;
   padding-left: 6px;
+  box-sizing: border-box;
 }
 .active-tag {
   display: inline-block;

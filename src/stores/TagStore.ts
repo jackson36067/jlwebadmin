@@ -50,7 +50,7 @@ export const useTagsStore = defineStore(
           const lastView =
             visitedViews.value[index - 1] || visitedViews.value[0];
           router.push(lastView.path);
-          defaultActiveMenuStore.changeDefaultMenuActive(lastView.path);
+          defaultActiveMenuStore.menuActive = lastView.path;
           // 如果删除的是首页的前一个标签,且只有这两个标签时,将面包屑内容清空
           if (index === 1) {
             breadcrum.updateBreadcrumbs([]);

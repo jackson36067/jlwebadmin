@@ -6,6 +6,8 @@ import router from "@/router";
 import { logoutAPI } from "@/apis/user";
 import { useLoginStore } from "@/stores/LoginStore";
 import { useBreadcrumbStore } from "@/stores/BreadcrumbStore";
+import { useTagsStore } from "@/stores/TagStore";
+import { useDefaultActiveMenuStore } from "@/stores/DefaultActiveMenuStore";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 const isCollapse = inject("isCollapse", ref(false));
@@ -18,12 +20,12 @@ const breadcrumbStore = useBreadcrumbStore();
 
 const input = ref("");
 // 是否隐藏查询表单变量
-const isOpacity = ref("0");
+const isOpacity = ref(false);
 // 隐藏就是把宽度改变达到隐藏的效果
 const doOpacity = () => {
-  isOpacity.value = isOpacity.value === "0" ? "240px" : "0";
+  isOpacity.value = isOpacity.value ? false : true;
   // 控制表单的内容
-  input.value = isOpacity.value === "0" ? "" : input.value;
+  input.value = isOpacity.value ? "" : input.value;
 };
 
 // 跳转至文档
@@ -101,6 +103,78 @@ const drawer = ref(false);
 // 抽屉中tag以及logo是否可见性
 const isShowLogo = inject("isShowLogo", ref(true));
 const isShowTag = inject("isShowTag", ref(true));
+
+// 菜单数据
+const loginStore = useLoginStore();
+const formatMenu = (menuVOList) => {
+  return menuVOList.map((item) => {
+    return {
+      name: item.title,
+      children: item.subMenuVOList ? formatMenu(item.subMenuVOList) : [],
+      path: item.path,
+    };
+  });
+};
+
+// 将菜单结构扁平化为一维数组
+const flatMenu = ref<Array<object>>([]);
+const flattenMenu = (tree, parentPath = "") => {
+  tree.forEach((menu) => {
+    const currentLabel = parentPath
+      ? `${parentPath}  >  ${menu.name}`
+      : menu.name;
+    if (menu.children) {
+      flattenMenu(menu.children, currentLabel);
+    }
+    flatMenu.value.push({ label: currentLabel, path: menu.path });
+  });
+};
+
+// 输入框绑定的内容
+const query = ref("");
+
+// 搜索方法
+// 在组件挂载时只执行一次
+onMounted(() => {
+  const menuTree = formatMenu(loginStore.userInfo.menuVOList);
+  flattenMenu(menuTree);
+});
+const fetchSuggestions = (inputValue: string, callback) => {
+  console.log(flatMenu.value);
+  if (!inputValue) {
+    callback([]);
+    return;
+  }
+  // 根据输入内容模糊匹配菜单名称
+  // 过滤菜单项，确保 menu 和 menu.label 存在
+  const suggestions = flatMenu.value.reverse().filter((item) => {
+    return item.label.includes(inputValue);
+  });
+  console.log(suggestions);
+  callback(suggestions);
+};
+
+// 跳转到对应路径
+const tagStore = useTagsStore();
+const defaultActiveMenu = useDefaultActiveMenuStore();
+const handleSelect = (item) => {
+  // console.log("选中菜单:", item);
+  if (item.path) {
+    router.push(item.path); // 跳转到对应路径
+    // FIXME:
+    const titles = item.label.split(">");
+    const subtitle = titles[1];
+    const title = titles[0];
+    const { path } = item;
+    const name = "";
+    // 新增标签
+    tagStore.addView({ path, subtitle, name, title });
+    // 修改面包屑
+    breadcrumbStore.updateBreadcrumbs([{ title: title }, { title: subtitle }]);
+    // 修改默认路径
+    defaultActiveMenu.menuActive = path;
+  }
+};
 </script>
 <template>
   <div class="header" :class="{ left: isCollapse }">
@@ -132,13 +206,20 @@ const isShowTag = inject("isShowTag", ref(true));
           @click="doOpacity"
           color="#707070"
         />
-        <input
-          type="text"
-          v-model="input"
+        <el-autocomplete
+          v-if="isOpacity"
+          v-model="query"
+          :fetch-suggestions="fetchSuggestions"
+          clearable
+          class="inline-input w-50"
           placeholder="Search"
-          class="input"
-          :style="'width:' + isOpacity + ''"
-        />
+          @select="handleSelect"
+        >
+          <!-- 添加自定义模板来显示建议项 -->
+          <template #default="{ item }">
+            <div>{{ item.label }}</div>
+          </template>
+        </el-autocomplete>
       </a>
       <a href="#" v-if="isShow">
         <el-popover
@@ -283,11 +364,11 @@ const isShowTag = inject("isShowTag", ref(true));
   .user {
     float: right;
     a {
+      position: relative;
       float: left;
       display: flex;
       align-items: center;
       height: 50px;
-      // margin-right: 30px;
       .svg-icon1 {
         margin: 4px 10px 0;
       }
@@ -303,6 +384,14 @@ const isShowTag = inject("isShowTag", ref(true));
         // 取消点击时的默认边框
         outline: none;
         transition: width 0.3s;
+      }
+      .menu-card {
+        position: absolute;
+        top: 60px;
+        left: 50px;
+        margin-bottom: 16px;
+        width: 170px;
+        padding: 16px;
       }
       .img {
         margin: 0 10px;
