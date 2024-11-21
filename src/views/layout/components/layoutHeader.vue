@@ -161,7 +161,6 @@ const handleSelect = (item) => {
   // console.log("选中菜单:", item);
   if (item.path) {
     router.push(item.path); // 跳转到对应路径
-    // FIXME:
     const titles = item.label.split(">");
     const subtitle = titles[1];
     const title = titles[0];
@@ -175,6 +174,21 @@ const handleSelect = (item) => {
     defaultActiveMenu.menuActive = path;
   }
 };
+
+// 跳转至中心页
+const toCenter = () => {
+  const path = "/center";
+  router.push(path);
+  const title = "";
+  const subtitle = "个人中心";
+  const name = "";
+  // 新增标签
+  tagStore.addView({ path, subtitle, name, title });
+  // 修改面包屑
+  breadcrumbStore.breadcrumbs = [{ title: subtitle }];
+  // 修改默认路径
+  defaultActiveMenu.menuActive = path;
+};
 </script>
 <template>
   <div class="header" :class="{ left: isCollapse }">
@@ -185,7 +199,7 @@ const handleSelect = (item) => {
       <span>
         <el-breadcrumb separator="/" style="color: #afbccd">
           <el-breadcrumb-item>首页</el-breadcrumb-item>
-          <template v-if="breadcrumbStore.breadcrumbs.length > 1">
+          <template v-if="breadcrumbStore.breadcrumbs.length > 0">
             <el-breadcrumb-item
               v-for="(item, index) in breadcrumbStore.breadcrumbs"
               :key="index"
@@ -300,7 +314,7 @@ const handleSelect = (item) => {
               <el-dropdown-item @click="drawer = true"
                 >布局设置</el-dropdown-item
               >
-              <el-dropdown-item>个人中心</el-dropdown-item>
+              <el-dropdown-item @click="toCenter">个人中心</el-dropdown-item>
               <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>

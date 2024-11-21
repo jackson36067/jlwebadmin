@@ -18,7 +18,21 @@ export const useLoginStore = defineStore(
     const clearLoginData = () => {
       userInfo.value = {};
     };
-    return { userInfo, doUserLogin, clearLoginData };
+    const updateUserInfo = (params: object) => {
+      userInfo.value.nickeName = params.nickeName;
+      userInfo.value.phone = params.phone;
+      userInfo.value.gender = params.gender;
+    };
+    const updateUserEmail = (email: string) => {
+      userInfo.value.email = email;
+    };
+    return {
+      userInfo,
+      doUserLogin,
+      clearLoginData,
+      updateUserInfo,
+      updateUserEmail,
+    };
   },
   {
     persist: true,

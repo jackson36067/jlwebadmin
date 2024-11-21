@@ -39,6 +39,8 @@ const goTo = (tag: view) => {
   // 如果是首页就修改面包屑为空
   if (tag.path === "/") {
     breadcrumbStore.updateBreadcrumbs([]);
+  } else if (tag.path === "/center") {
+    breadcrumbStore.updateBreadcrumbs([{ title: tag.subtitle }]);
   } else {
     breadcrumbStore.updateBreadcrumbs([
       { title: tag.title },

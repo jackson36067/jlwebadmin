@@ -138,3 +138,57 @@ export const exportOnlineUserInfoAPI = () => {
     responseType: "blob",
   });
 };
+
+/**
+ * 获取当前用户的操作日志
+ * @param params
+ * @returns
+ */
+export const getUserLogAPI = (params: object) => {
+  return httpInstance({
+    method: "get",
+    url: "user/center/log",
+    params,
+  });
+};
+
+/**
+ * 发送验证码给当前邮箱
+ * @param email
+ * @returns
+ */
+export const sendVerifyCodeAPI = (email: string) => {
+  return httpInstance({
+    method: "get",
+    url: "user/email/code",
+    params: {
+      email,
+    },
+  });
+};
+
+/**
+ * 修改用户邮箱
+ * @param data
+ * @returns
+ */
+export const updateEmailAPI = (data: object) => {
+  return httpInstance({
+    method: "put",
+    url: "user/update/email",
+    data,
+  });
+};
+
+/**
+ * 修改用户密码
+ * @param data
+ * @returns
+ */
+export const updatePasswordAPI = (data: object) => {
+  return httpInstance({
+    method: "put",
+    url: "user/update/password",
+    data,
+  });
+};

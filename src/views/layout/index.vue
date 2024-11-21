@@ -10,10 +10,6 @@ import { useRoute } from "vue-router";
 const isCollapse = ref(false);
 provide("isCollapse", isCollapse);
 
-// 默认显示菜单路径
-const menuActive = ref("/");
-provide("menuActive", menuActive);
-
 // 提供是否显示LOGO以及标签
 const isShowLogo = ref(true);
 const isShowTag = ref(true);

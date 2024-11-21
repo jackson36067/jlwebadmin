@@ -9,6 +9,7 @@ import deptView from "@/views/system/dept/index.vue";
 import timingView from "@/views/system/timing/index.vue";
 import onlineView from "@/views/monitor/online/index.vue";
 import logView from "@/views/monitor/log/index.vue";
+import centerView from "@/views/personCenter/index.vue";
 import { useLoginStore } from "@/stores/LoginStore";
 
 const router = createRouter({
@@ -57,6 +58,10 @@ const router = createRouter({
           path: "logs",
           component: logView,
           meta: { transitionName: "fade" },
+        },
+        {
+          path: "center",
+          component: centerView,
         },
       ],
     },

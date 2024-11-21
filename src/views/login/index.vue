@@ -9,7 +9,7 @@ import svgIcon from "@/components/svg/svgIcon.vue";
 import { getCodeAPI } from "@/apis/login";
 import { useDefaultActiveMenuStore } from "@/stores/DefaultActiveMenuStore";
 const loginForm = ref({
-  username: "admin",
+  username: "jackson",
   password: "123456",
   code: "",
 });
