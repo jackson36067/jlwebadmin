@@ -7,6 +7,7 @@ import {
   Search,
   Delete,
 } from "@element-plus/icons-vue";
+import { table } from "console";
 import { ElMessage } from "element-plus";
 import { computed, inject, onMounted, ref } from "vue";
 
@@ -60,6 +61,7 @@ const queryParams = computed(() => ({
   location: form.value.location || null,
   begin: formatDateForBackend(form.value.createTime[0]) || null, // 默认值为 null
   end: formatDateForBackend(form.value.createTime[1]) || null, // 默认值为 null
+  isError: true,
   total: "",
 }));
 
@@ -74,9 +76,7 @@ const getLogList = async () => {
   const res = await getLogListAPI(queryParams.value);
   tableData.value = res.data.list;
   queryParams.value.total = res.data.total;
-  if (tableData.value.length > 0) {
-    exportButton.value = false;
-  }
+  exportButton.value = false;
 };
 // 加载表格函数
 const loadTable = () => {
@@ -118,7 +118,7 @@ const handleLogCurrentChange = () => {
 
 // 导出日志数据
 const exportLogData = async () => {
-  await exportLogDataAPI(false)
+  await exportLogDataAPI(queryParams.value.isError)
     .then((data) => {
       // console.log(data);
       if (!data) {
@@ -144,6 +144,16 @@ const exportLogData = async () => {
     .catch((error) => {
       console.error("下载错误:", error);
     });
+};
+
+// 查看异常详情对话框可见性
+const exceptionDetailDialogVisable = ref(false);
+
+// 展示异常详情信息
+const exceptionDetail = ref("");
+const showExceptionDetail = (rowExceptionDetail: string) => {
+  exceptionDetailDialogVisable.value = true;
+  exceptionDetail.value = rowExceptionDetail;
 };
 </script>
 <template>
@@ -269,19 +279,21 @@ const exportLogData = async () => {
             <el-table-column label="IP来源" prop="address" />
             <el-table-column label="描述" prop="description" />
             <el-table-column label="浏览器" prop="browser" />
-            <el-table-column label="请求耗时" prop="time">
-              <template #default="{ row }">
-                <el-button
-                  style="background-color: #e9e9e9; color: #212121; width: 60px"
-                  >{{ row.time + "ms" }}</el-button
-                >
-              </template>
-            </el-table-column>
             <el-table-column
               label="创建时间"
               prop="createTime"
               align="center"
+              min-width="200"
             />
+            <el-table-column label="异常详情" prop="exceptionDetail">
+              <template #default="{ row }">
+                <el-link
+                  :underline="false"
+                  @click="showExceptionDetail(row.exceptionDetail)"
+                  >查看详情
+                </el-link>
+              </template>
+            </el-table-column>
           </el-table>
           <el-pagination
             style="margin-top: 20px"
@@ -297,6 +309,15 @@ const exportLogData = async () => {
       </div>
     </div>
   </div>
+  <el-dialog
+    title="异常详情"
+    v-model="exceptionDetailDialogVisable"
+    width="500px"
+    :destroy-on-close="true"
+    :modal="true"
+  >
+    {{ exceptionDetail }}
+  </el-dialog>
 </template>
 
 <style scoped lang="scss">

@@ -10,6 +10,9 @@ import timingView from "@/views/system/timing/index.vue";
 import onlineView from "@/views/monitor/online/index.vue";
 import logView from "@/views/monitor/log/index.vue";
 import centerView from "@/views/personCenter/index.vue";
+import errorLogView from "@/views/monitor/errorLog/index.vue";
+import iconView from "@/components/icons/index.vue";
+import editorView from "@/components/editor/index.vue";
 import { useLoginStore } from "@/stores/LoginStore";
 
 const router = createRouter({
@@ -62,6 +65,18 @@ const router = createRouter({
         {
           path: "center",
           component: centerView,
+        },
+        {
+          path: "errorLog",
+          component: errorLogView,
+        },
+        {
+          path: "icon",
+          component: iconView,
+        },
+        {
+          path: "tinymce",
+          component: editorView,
         },
       ],
     },

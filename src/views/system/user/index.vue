@@ -72,22 +72,33 @@ const getUserList = async () => {
   });
   total.value = res.data.total;
 };
+
+// 点击刷新按钮刷新用户信息
+const loading = ref(false);
+const refreshUserInfo = () => {
+  loading.value = true;
+  setTimeout(() => {
+    getUserList();
+    loading.value = false;
+  }, 1000);
+};
+
 onMounted(() => {
-  getUserList();
   getDeptList();
+  refreshUserInfo();
 });
 
 // 修改分页page-size(当前页码展示条数)时重新获取用户数据
 const handleSizeChange = () => {
-  getUserList();
+  refreshUserInfo();
 };
 // 修改分页current-page(当前页码)时重新获取用户数据
 const handleCurrentChange = () => {
-  getUserList();
+  refreshUserInfo();
 };
 // 点击搜索后发起请求获取用户列表数据
 const queryUserList = () => {
-  getUserList();
+  refreshUserInfo();
 };
 
 // 重置表单
@@ -95,7 +106,7 @@ function resetFields() {
   form.value.createTime = "";
   form.value.enabled = "";
   form.value.usernameOrEmail = "";
-  getUserList();
+  refreshUserInfo();
 }
 const doReset = () => {
   resetFields();
@@ -143,16 +154,6 @@ const shortcuts = [
 const showQuery = ref(true);
 const isShowQuery = () => {
   showQuery.value = showQuery.value === true ? false : true;
-};
-
-// 点击刷新按钮刷新用户信息
-const loading = ref(false);
-const refreshUserInfo = () => {
-  loading.value = true;
-  setTimeout(() => {
-    getUserList();
-    loading.value = false;
-  }, 2000);
 };
 
 // 修改状态

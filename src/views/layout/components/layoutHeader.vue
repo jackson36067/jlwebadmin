@@ -356,7 +356,7 @@ const toCenter = () => {
   width: calc(100% - 199px);
   height: 50px;
   border-bottom: 1px solid #dadcdf;
-  // box-shadow: 0 -5px #dadcdf;
+  box-sizing: border-box;
   .menu-index {
     display: flex;
     float: left;

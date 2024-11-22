@@ -231,6 +231,7 @@ const updatePassword = () => {
                 type="primary"
                 class="link"
                 @click="updatePasswordDialogVisible = true"
+                :underline="false"
                 >修改密码</el-link
               >
               <el-divider direction="vertical" />
@@ -238,6 +239,7 @@ const updatePassword = () => {
                 type="primary"
                 class="link"
                 @click="updateEmailDialogVisible = true"
+                :underline="false"
               >
                 修改邮箱
               </el-link>

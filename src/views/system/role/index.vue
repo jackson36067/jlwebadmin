@@ -79,7 +79,11 @@ const shortcuts = [
   },
 ];
 
+// 导出按钮可用性
+const exportButton = ref(true);
+
 // 表格数据
+const total = ref(1);
 const roleList = ref<Array<object>>([]);
 const getRoleList = async () => {
   const res = await getRoleWithPagingAPI(queryParams.value);
@@ -87,9 +91,25 @@ const getRoleList = async () => {
   roleList.value.forEach((item) => {
     item.createTime = formatLocalDateTime(item.createTime);
   });
+  total.value = res.data.total;
+  if (roleList.value.length > 0) {
+    exportButton.value = false;
+  }
 };
+
+// 点击刷新按钮刷新角色信息
+const loading = ref(false);
+const refreshUserInfo = () => {
+  loading.value = true;
+  setTimeout(() => {
+    // 重新获取角色数据
+    getRoleList();
+    loading.value = false;
+  }, 1000);
+};
+
 onMounted(() => {
-  getRoleList();
+  refreshUserInfo();
 });
 
 // 点击搜索按钮根据条件搜索角色信息
@@ -100,12 +120,21 @@ const queryRoleList = () => {
   console.log(queryParams.value);
   getRoleList();
 };
+
+const handleRoleCurrentChange = () => {
+  refreshUserInfo();
+};
+
+const handleRoleSizeChange = () => {
+  refreshUserInfo();
+};
+
 // 重置表单
 function resetFields() {
   form.value.createTime = "";
   form.value.nameOrDescription = "";
   // 重新获取role数据
-  getRoleList();
+  refreshUserInfo();
 }
 
 // 点击重置按钮后将数据重置
@@ -117,17 +146,6 @@ const doReset = () => {
 const showQuery = ref(true);
 const isShowQuery = () => {
   showQuery.value = showQuery.value === true ? false : true;
-};
-
-// 点击刷新按钮刷新角色信息
-const loading = ref(false);
-const refreshUserInfo = () => {
-  loading.value = true;
-  setTimeout(() => {
-    // 重新获取角色数据
-    getRoleList();
-    loading.value = false;
-  }, 2000);
 };
 
 // 将得到的菜单改成Tree展示所需类型
@@ -504,6 +522,7 @@ const deleteRoleRow = async (id: string) => {
             :icon="Download"
             style="font-size: 12px"
             @click="exportRoleData"
+            :disabled="exportButton"
           >
             导出
           </el-button>
@@ -532,7 +551,6 @@ const deleteRoleRow = async (id: string) => {
           <div class="list">角色列表</div>
           <el-table
             :data="roleList"
-            border
             style="width: 100%"
             show-overflow-tooltip
             v-loading="loading"
@@ -590,6 +608,16 @@ const deleteRoleRow = async (id: string) => {
               </template>
             </el-table-column>
           </el-table>
+          <el-pagination
+            style="margin-top: 20px"
+            v-model:page-size="queryParams.pageSize"
+            :page-sizes="[5, 10, 20, 40, 50, 100]"
+            layout="total, prev, pager, next, sizes"
+            :total="total"
+            v-model:current-page="queryParams.page"
+            @size-change="handleRoleSizeChange"
+            @current-change="handleRoleCurrentChange"
+          />
         </div>
         <div class="assignment-role">
           <div class="list">

@@ -86,6 +86,9 @@ const queryParams = computed(() => ({
   end: formatDateForBackend(form.value.createTime[1]) || null, // 默认值为 null
 }));
 
+// 导出按钮可用性
+const exportButton = ref(true);
+
 const menuTableData = ref([]);
 const menuTreeData = ref([]);
 const getMenuList = async () => {
@@ -93,9 +96,12 @@ const getMenuList = async () => {
   const res = await getMenuListAPI(queryParams.value);
   menuTableData.value = formatMenuListData(res.data);
   menuTreeData.value = formatMenuTreeData(res.data);
+  if (menuTableData.value.length > 0) {
+    exportButton.value = false;
+  }
 };
 onMounted(() => {
-  getMenuList();
+  doQueryMenuList();
 });
 
 // 根据参数获取对象
@@ -104,7 +110,7 @@ const doQueryMenuList = () => {
   setTimeout(() => {
     getMenuList();
     tableLoad.value = false;
-  }, 2000);
+  }, 1000);
 };
 
 // 重置表单
@@ -112,11 +118,7 @@ const resetFields = () => {
   form.value.title = "";
   form.value.createTime = "";
   // 重新获取role数据
-  tableLoad.value = true;
-  setTimeout(() => {
-    getMenuList();
-    tableLoad.value = false;
-  }, 2000);
+  doQueryMenuList();
 };
 
 // 点击重置按钮后将数据重置
@@ -523,6 +525,7 @@ const exportMenuData = async () => {
             :icon="Download"
             style="font-size: 12px"
             @click="exportMenuData"
+            :disabled="exportButton"
           >
             导出
           </el-button>

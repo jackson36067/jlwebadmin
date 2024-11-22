@@ -94,6 +94,9 @@ const formatDeptDataList = (data: Array<object>) => {
   });
 };
 
+// 导出按钮可用性
+const exportButton = ref(true);
+
 // 获取部门列表
 const deptList = ref<Array<object>>([]);
 
@@ -103,17 +106,10 @@ const getDeptList = async () => {
   const res = await getDeptListAPI(queryParams.value);
   deptList.value = formatDeptDataList(res.data);
   dialogDeptList.value = transformData(res.data);
+  if (deptList.value.length > 0) {
+    exportButton.value = false;
+  }
 };
-onMounted(() => {
-  getDeptList();
-});
-
-// 重置表单
-function resetFields() {
-  form.value.createTime = "";
-  form.value.enabled = "";
-  form.value.name = "";
-}
 
 // 重新加载表格
 const tableLoad = ref(false);
@@ -122,8 +118,19 @@ const refreshDeptTable = () => {
   setTimeout(() => {
     getDeptList();
     tableLoad.value = false;
-  }, 2000);
+  }, 1000);
 };
+
+onMounted(() => {
+  refreshDeptTable();
+});
+
+// 重置表单
+function resetFields() {
+  form.value.createTime = "";
+  form.value.enabled = "";
+  form.value.name = "";
+}
 
 const doReset = () => {
   resetFields();
@@ -441,6 +448,7 @@ const exportDeptData = async () => {
             :icon="Download"
             style="font-size: 12px"
             @click="exportDeptData"
+            :disabled="exportButton"
           >
             导出
           </el-button>

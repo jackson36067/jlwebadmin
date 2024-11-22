@@ -5,7 +5,7 @@ const isCollapse = inject("isCollapse", ref(false));
 </script>
 <template>
   <div class="footer" :class="{ updateWidth: isCollapse }">
-    <span>© 2018-2022 Zheng Jie </span>
+    <span>© 2018-2022 Jackson </span>
     <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">
       Apache License 2.0
     </a>

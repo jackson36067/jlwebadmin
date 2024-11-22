@@ -27,11 +27,19 @@ const form = ref({
   username: "",
 });
 
+// 导出按钮可用性
+const exportButton = ref(true);
+
 const onlineUserList = ref([]);
 const tableLoad = ref(false);
+const total = ref(1);
 const getOnlineUser = async () => {
   const res = await getOnlineUserAPI(form.value);
   onlineUserList.value = res.data.list;
+  total.value = res.data.total;
+  if (onlineUserList.value.length > 0) {
+    exportButton.value = false;
+  }
 };
 
 const loadOnlinUserInfo = () => {
@@ -44,6 +52,14 @@ const loadOnlinUserInfo = () => {
 onMounted(() => {
   loadOnlinUserInfo();
 });
+
+const handleOnlineUserCurrentChange = () => {
+  loadOnlinUserInfo();
+};
+
+const handleOnlineUserSizeChange = () => {
+  loadOnlinUserInfo();
+};
 
 // 点击刷新图标后刷新数据
 const refreshDeptTable = () => {
@@ -188,6 +204,7 @@ const exportOnlineUserInfo = async () => {
             :icon="Download"
             style="font-size: 12px"
             @click="exportOnlineUserInfo"
+            :disabled="exportButton"
           >
             导出
           </el-button>
@@ -247,6 +264,16 @@ const exportOnlineUserInfo = async () => {
               </template>
             </el-table-column>
           </el-table>
+          <el-pagination
+            style="margin-top: 20px"
+            v-model:page-size="form.pageSize"
+            :page-sizes="[5, 10, 20, 40, 50, 100]"
+            layout="total, prev, pager, next, sizes"
+            :total="total"
+            v-model:current-page="form.page"
+            @size-change="handleOnlineUserSizeChange"
+            @current-change="handleOnlineUserCurrentChange"
+          />
         </div>
       </div>
     </div>

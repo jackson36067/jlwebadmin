@@ -79,6 +79,9 @@ const queryParams = computed(() => ({
   end: formatDateForBackend(form.value.createTime[1]) || null,
 }));
 
+// 导出按钮可用性
+const exportButton = ref(true);
+
 // 获取任务调度列表数据
 const taskList = ref([]);
 const total = ref(1);
@@ -89,39 +92,33 @@ const getTaskList = async () => {
   });
   taskList.value = res.data.list;
   total.value = res.data.total;
+  if (taskList.value.length > 0) {
+    exportButton.value = false;
+  }
 };
-onMounted(() => {
+const refreshInfo = () => {
   loading.value = true;
   setTimeout(() => {
     getTaskList();
     loading.value = false;
   }, 1000);
+};
+onMounted(() => {
+  refreshInfo();
 });
 
 // 修改分页page-size(当前页码展示条数)时重新获取用户数据
 const handleSizeChange = () => {
-  loading.value = true;
-  setTimeout(() => {
-    getTaskList();
-    loading.value = false;
-  }, 1000);
+  refreshInfo();
 };
 // 修改分页current-page(当前页码)时重新获取用户数据
 const handleCurrentChange = () => {
-  loading.value = true;
-  setTimeout(() => {
-    getTaskList();
-    loading.value = false;
-  }, 1000);
+  refreshInfo();
 };
 
 // 点击搜索根据参数进行查询
 const queryTaskListWithParams = () => {
-  loading.value = true;
-  setTimeout(() => {
-    getTaskList();
-    loading.value = false;
-  }, 2000);
+  refreshInfo();
 };
 
 const loading = ref(false);
@@ -131,11 +128,7 @@ const resetFields = () => {
 };
 const doReset = () => {
   resetFields();
-  loading.value = true;
-  setTimeout(() => {
-    getTaskList();
-    loading.value = false;
-  }, 2000);
+  refreshInfo();
 };
 
 const refreshTaskInfo = () => {
@@ -517,6 +510,7 @@ const exportTaskLogData = async () => {
             :icon="Download"
             style="font-size: 12px"
             @click="exportTaskData"
+            :disabled="exportButton"
           >
             导出
           </el-button>

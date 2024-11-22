@@ -13,10 +13,17 @@ export const getLogListAPI = (params: object) => {
   });
 };
 
-export const exportLogDataAPI = () => {
+/**
+ * 导出日志数据
+ * @returns
+ */
+export const exportLogDataAPI = (isError: boolean) => {
   return httpInstance({
     method: "get",
     url: "log/export",
     responseType: "blob",
+    params: {
+      isError,
+    },
   });
 };
