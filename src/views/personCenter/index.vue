@@ -18,6 +18,7 @@ import {
   updateUserByUserIdAPI,
 } from "@/apis/user";
 import { ElMessage } from "element-plus";
+import type { UploadProps } from "element-plus";
 
 const isCollapse = inject("isCollapse", ref(false));
 
@@ -181,6 +182,30 @@ const updatePassword = () => {
     }
   });
 };
+
+// 模拟从登录存储中获取 Token
+const uploadHeaders = ref({
+  Authorization: `${userInfo.token}`,
+});
+
+// 上上传图片前进行校验
+const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
+  if (rawFile.type !== "image/jpeg") {
+    ElMessage.error("Avatar picture must be JPG format!");
+    return false;
+  } else if (rawFile.size / 1024 / 1024 > 2) {
+    ElMessage.error("Avatar picture size can not exceed 2MB!");
+    return false;
+  }
+  return true;
+};
+
+// 上传图片成功后执行的方法
+const handleAvatarSuccess = async (reponse) => {
+  const avatar: string = reponse.data;
+  await updateUserByUserIdAPI(userInfo.id, { avatarPath: avatar });
+  loginStore.updateUserAvatarPath(avatar);
+};
 </script>
 <template>
   <div class="body" :class="{ left: isCollapse }">
@@ -189,7 +214,17 @@ const updatePassword = () => {
       <div class="left-panel">
         <div class="title">个人信息</div>
         <div class="avatar-container">
-          <el-avatar :size="100" src="path/to/totoro.jpg" />
+          <el-upload
+            class="avatar-uploader"
+            action="http://localhost:8080/admin/user/upload"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            :name="'image'"
+            :headers="uploadHeaders"
+          >
+            <el-avatar :size="100" :src="userInfo.avatarPath" />
+          </el-upload>
         </div>
 
         <div class="info-list">
@@ -567,6 +602,28 @@ $panel-bg: #fff;
       }
     }
   }
+}
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+  width: 100px;
+  height: 100px;
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
 }
 .left {
   left: 59px;

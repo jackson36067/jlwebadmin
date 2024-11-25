@@ -308,7 +308,7 @@ const toCenter = () => {
       </a>
       <a href="#">
         <el-dropdown placement="bottom" trigger="click" class="dropdown">
-          <img :src="avatar" alt="" class="img" />
+          <img :src="loginStore.userInfo.avatarPath" alt="" class="img" />
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="drawer = true"

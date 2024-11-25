@@ -26,12 +26,16 @@ export const useLoginStore = defineStore(
     const updateUserEmail = (email: string) => {
       userInfo.value.email = email;
     };
+    const updateUserAvatarPath = (avatar: string) => {
+      userInfo.value.avatarPath = avatar;
+    };
     return {
       userInfo,
       doUserLogin,
       clearLoginData,
       updateUserInfo,
       updateUserEmail,
+      updateUserAvatarPath,
     };
   },
   {
