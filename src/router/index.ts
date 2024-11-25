@@ -13,6 +13,8 @@ import centerView from "@/views/personCenter/index.vue";
 import errorLogView from "@/views/monitor/errorLog/index.vue";
 import iconView from "@/components/icons/index.vue";
 import editorView from "@/components/editor/index.vue";
+import markdownView from "@/components/markdown/index.vue";
+import chatView from "@/views/tools/chat/index.vue";
 import { useLoginStore } from "@/stores/LoginStore";
 
 const router = createRouter({
@@ -77,6 +79,14 @@ const router = createRouter({
         {
           path: "tinymce",
           component: editorView,
+        },
+        {
+          path: "markdown",
+          component: markdownView,
+        },
+        {
+          path: "chat",
+          component: chatView,
         },
       ],
     },

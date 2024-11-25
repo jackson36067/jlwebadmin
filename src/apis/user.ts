@@ -192,3 +192,34 @@ export const updatePasswordAPI = (data: object) => {
     data,
   });
 };
+
+/**
+ * 获取好友列表
+ * @param username
+ * @returns
+ */
+export const getUserFriendListAPI = (username: string) => {
+  return httpInstance({
+    method: "get",
+    url: "user/friend/list",
+    params: {
+      username,
+    },
+  });
+};
+
+/**
+ * 获取两个用户的聊天记录
+ * @param params
+ * @returns
+ */
+export const getUsersMessageAPI = (
+  username: string,
+  friendUsername: string
+) => {
+  return httpInstance({
+    method: "get",
+    url: "user/message",
+    params: { username, friendUsername },
+  });
+};

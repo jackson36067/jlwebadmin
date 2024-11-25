@@ -91,8 +91,8 @@ const logout = async () => {
     .catch(() => {
       // 取消修改也要刷新页面
       ElMessage({
-        type: "error",
-        message: "退出失败",
+        type: "warning",
+        message: "退出取消",
       });
     });
 };

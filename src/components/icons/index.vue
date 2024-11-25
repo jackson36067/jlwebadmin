@@ -88,6 +88,7 @@ const iconList = ref<Array<string>>([
   "wechat",
   "weixin",
   "zujian",
+  "chat",
 ]);
 
 const isCollapse = inject("isCollapse");

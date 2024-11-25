@@ -275,6 +275,7 @@ const iconList = ref<Array<string>>([
   "wechat",
   "weixin",
   "zujian",
+  "chat",
 ]);
 
 // 新增操作

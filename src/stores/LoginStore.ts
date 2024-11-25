@@ -19,7 +19,7 @@ export const useLoginStore = defineStore(
       userInfo.value = {};
     };
     const updateUserInfo = (params: object) => {
-      userInfo.value.nickeName = params.nickeName;
+      userInfo.value.nickName = params.nickName;
       userInfo.value.phone = params.phone;
       userInfo.value.gender = params.gender;
     };

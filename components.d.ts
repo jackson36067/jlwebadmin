@@ -7,7 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Editor: typeof import('./src/components/Editor/index.vue')['default']
+    Editor: typeof import('./src/components/editor/index.vue')['default']
     ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
@@ -28,6 +28,7 @@ declare module 'vue' {
     ElEmpty: typeof import('element-plus/es')['ElEmpty']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
+    ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
@@ -58,6 +59,7 @@ declare module 'vue' {
     ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
     Icon: typeof import('./src/components/icon/index.vue')['default']
     Icons: typeof import('./src/components/icons/index.vue')['default']
+    Markdown: typeof import('./src/components/markdown/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Svg: typeof import('./src/components/svg/index.vue')['default']

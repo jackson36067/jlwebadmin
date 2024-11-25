@@ -27,4 +27,8 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  // vite optimizeDeps 的强制优化功能重新加载依赖 (markdown依赖)。
+  optimizeDeps: {
+    include: ["@kangc/v-md-editor", "@kangc/v-md-editor/lib/theme/vuepress.js"],
+  },
 });
