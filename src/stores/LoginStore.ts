@@ -12,7 +12,6 @@ export const useLoginStore = defineStore(
     const userInfo = ref({});
     const doUserLogin = async ({ username, password, code }: loginParams) => {
       const res = await LoginAPI({ username, password, code });
-      console.log(res);
       userInfo.value = res.data;
     };
     const clearLoginData = () => {
@@ -29,6 +28,9 @@ export const useLoginStore = defineStore(
     const updateUserAvatarPath = (avatar: string) => {
       userInfo.value.avatarPath = avatar;
     };
+    const getMenuData = () => {
+      return userInfo.value.menuVOList;
+    };
     return {
       userInfo,
       doUserLogin,
@@ -36,6 +38,7 @@ export const useLoginStore = defineStore(
       updateUserInfo,
       updateUserEmail,
       updateUserAvatarPath,
+      getMenuData,
     };
   },
   {

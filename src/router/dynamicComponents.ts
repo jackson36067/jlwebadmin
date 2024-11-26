@@ -1,0 +1,15 @@
+export const componentMap = {
+  User: () => import("@/views/system/user/index.vue"),
+  Role: () => import("@/views/system/role/index.vue"),
+  Menu: () => import("@/views/system/menu/index.vue"),
+  Dept: () => import("@/views/system/dept/index.vue"),
+  Timing: () => import("@/views/system/timing/index.vue"),
+  OnlineUser: () => import("@/views/monitor/online/index.vue"),
+  Log: () => import("@/views/monitor/log/index.vue"),
+  ErrorLog: () => import("@/views/monitor/errorLog/index.vue"),
+  Editor: () => import("@/components/editor/index.vue"),
+  Icons: () => import("@/components/icons/index.vue"),
+  Markdown: () => import("@/components/markdown/index.vue"),
+  Chat: () => import("@/views/tools/chat/index.vue"),
+  Email: () => import("@/views/tools/email/index.vue"),
+};

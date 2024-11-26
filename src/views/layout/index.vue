@@ -22,7 +22,8 @@ const showProgress = ref(false); // 控制进度条显示
 // 监听路由变化，触发进度条
 watch(
   () => route.fullPath,
-  () => {
+  async () => {
+    console.log(showProgress.value);
     showProgress.value = true; // 显示进度条
     setTimeout(() => {
       showProgress.value = false; // 隐藏进度条并切换组件
@@ -32,7 +33,10 @@ watch(
 </script>
 <template>
   <div class="layout">
-    <div v-if="showProgress" class="progress-bar"></div>
+    <div
+      v-if="showProgress"
+      :class="['progress-bar', { toright: showProgress }]"
+    ></div>
     <layout-aside />
     <layoutHeader />
     <layoutMenu />
@@ -55,18 +59,12 @@ watch(
   top: 0;
   left: 0;
   height: 2px;
-  background: linear-gradient(to right, #2299dd, #2299dd);
+  background: #2299dd;
   width: 0;
-  animation: progress 0.3s linear forwards;
+  transition: width 0.5s;
 }
 
-/* 进度条动画 */
-@keyframes progress {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
+.toright {
+  width: 100%;
 }
 </style>

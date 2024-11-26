@@ -24,9 +24,9 @@ Object.keys(ElIconModules).forEach(function (key) {
   app.component(ElIconModules[key].name, ElIconModules[key]);
 });
 app.use(VueMarkdownEditor);
+app.use(router);
 app.use(createPinia());
 app.use(pinia);
-app.use(router);
 app.use(gloablComponent);
 
 app.mount("#app");

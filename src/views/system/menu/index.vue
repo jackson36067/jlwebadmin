@@ -24,7 +24,7 @@ import {
 import { ElMessage, ElMessageBox } from "element-plus";
 import { inject, onMounted, ref, computed } from "vue";
 
-const collapse = inject("collapse");
+const collapse = inject("isCollapse");
 
 const showQuery = ref(true);
 
@@ -981,16 +981,16 @@ const exportMenuData = async () => {
   height: 26px;
   margin: 28px 0 0 10px;
 }
-.custom-tabs ::v-deep .el-tabs__header {
-  background-color: #fff;
-  color: #000;
-}
-.custom-tabs ::v-deep .el-tabs__item.is-active {
-  color: #fff;
-  background-color: #000;
-  border-radius: 5px;
-  overflow: hidden;
-}
+// .custom-tabs ::v-deep .el-tabs__header {
+//   background-color: #fff;
+//   color: #000;
+// }
+// .custom-tabs ::v-deep .el-tabs__item.is-active {
+//   color: #fff;
+//   background-color: #000;
+//   border-radius: 5px;
+//   overflow: hidden;
+// }
 
 .addIcon {
   display: inline-block;

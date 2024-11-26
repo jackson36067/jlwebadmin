@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Background from "@/assets/images/background.jpeg";
+import Background from "@/assets/images/girl.jpg";
 import { useLoginStore } from "@/stores/LoginStore";
 import { onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
@@ -8,6 +8,7 @@ import router from "@/router";
 import svgIcon from "@/components/svg/svgIcon.vue";
 import { getCodeAPI } from "@/apis/login";
 import { useDefaultActiveMenuStore } from "@/stores/DefaultActiveMenuStore";
+import { initRoutes } from "@/router/initRoutes";
 const loginForm = ref({
   username: "jackson",
   password: "123456",
@@ -40,6 +41,8 @@ const login = async () => {
   });
   // 提示登录成功
   ElMessage({ type: "success", message: "登录成功" });
+  // 动态加载路由
+  await initRoutes(loginStore.userInfo.menuVOList);
   // 登录按钮键显示加载
   loading.value = true;
   setTimeout(() => {

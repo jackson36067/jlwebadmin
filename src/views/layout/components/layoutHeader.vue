@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import svgIcon from "@/components/svg/svgIcon.vue";
 import { inject, ref, onMounted, onBeforeUnmount } from "vue";
-import avatar from "@/assets/images/avatar.png";
 import router from "@/router";
 import { logoutAPI } from "@/apis/user";
 import { useLoginStore } from "@/stores/LoginStore";
 import { useBreadcrumbStore } from "@/stores/BreadcrumbStore";
 import { useTagsStore } from "@/stores/TagStore";
 import { useDefaultActiveMenuStore } from "@/stores/DefaultActiveMenuStore";
+import 'element-plus/es/components/message-box/style/css'
 import { ElMessage, ElMessageBox } from "element-plus";
 
 const isCollapse = inject("isCollapse", ref(false));
