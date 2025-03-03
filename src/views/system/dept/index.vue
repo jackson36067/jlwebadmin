@@ -6,6 +6,7 @@ import {
   getDeptListAPI,
   updateDeptAPI,
 } from "@/apis/dept";
+import type { deptList, deptTree, deptRowInfo } from "@/types/dept";
 import { transformData } from "@/utils/dataFormat";
 import {
   formatDateForBackend,
@@ -22,6 +23,7 @@ import {
   Search,
 } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import type { FormInstance } from "element-plus";
 import { inject, onMounted } from "vue";
 import { ref, computed } from "vue";
 const isCollapse = inject("isCollapse");
@@ -78,8 +80,8 @@ const queryParams = computed(() => ({
 }));
 
 // 格式化部门列表数据
-const formatDeptDataList = (data: Array<object>) => {
-  return data.map((item) => {
+const formatDeptDataList = (data: deptList[]): deptTree[] => {
+  return data.map((item: deptList) => {
     return {
       id: item.id,
       pid: item.pid,
@@ -162,7 +164,7 @@ const addDeptForm = ref({
 // 新增部门
 
 // 校验规则
-const addFomrRef = ref(null);
+const addFomrRef = ref<FormInstance>();
 const rules = {
   name: [{ required: true, trigger: "blur", message: "请输入名称" }],
   deptSort: [
@@ -175,7 +177,7 @@ const rules = {
   ],
 };
 const addDept = () => {
-  addFomrRef.value.validate(async (valid) => {
+  addFomrRef.value!.validate(async (valid) => {
     if (valid) {
       await addDeptAPI(addDeptForm.value);
       getDeptList();
@@ -190,9 +192,9 @@ const addDept = () => {
 // 修改部门参数
 const updateDeptForm = ref({
   id: "",
-  name: null,
+  name: "",
   deptSort: "999",
-  pid: null,
+  pid: "",
   enabled: true,
   type: "1", // 多余字段,用与控制是否为顶级部门 (1.是顶级部门,0.不是顶级部门)
 });
@@ -206,8 +208,8 @@ const updateButtonVisible = ref(true);
 
 // 复选框发生变化时,控制删除以及修改按钮可用性
 
-const deleteDeptIds = ref([]);
-const handleSelectionChange = (row: Array<object>) => {
+const deleteDeptIds = ref<string[]>([]);
+const handleSelectionChange = (row: deptRowInfo[]) => {
   deleteDeptIds.value = [];
   updateButtonVisible.value = true;
   if (row.length === 1) {
@@ -230,7 +232,7 @@ const updateDept = async () => {
 };
 
 // 每一行的状态栏修改
-const updateDeptEnabled = async (row: object) => {
+const updateDeptEnabled = async (row: deptRowInfo) => {
   ElMessageBox.confirm(
     row.enabled === true
       ? '此操作将 "启用" test, 是否继续？'
@@ -268,7 +270,7 @@ const updateDeptEnabled = async (row: object) => {
 };
 
 // 每一行编辑按钮进行修改部门
-const updateDeptRowInfo = (row) => {
+const updateDeptRowInfo = (row: deptRowInfo) => {
   dialogUpdateDeptVisilbe.value = true;
   // 封装编辑部门参数
   updateDeptForm.value = row;
@@ -301,7 +303,7 @@ const deleteDept = async () => {
 };
 
 // 每一行删除按钮删除部门
-const deleteDeptRowInfo = (row) => {
+const deleteDeptRowInfo = (row: deptRowInfo) => {
   deleteDeptIds.value = [];
   deleteDeptIds.value.push(row.id);
   ElMessageBox.confirm(`你确认要删除部门${row.name}吗`, "Warning", {
@@ -335,7 +337,7 @@ const exportDeptData = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -357,7 +359,11 @@ const exportDeptData = async () => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="[{ left: isCollapse }]"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="query" v-if="showQuery">
         <el-form
@@ -506,12 +512,14 @@ const exportDeptData = async () => {
           <el-table-column label="操作" align="center">
             <template #default="{ row }">
               <el-button
+                link
                 type="warning"
                 :icon="Edit"
                 circle
                 @click="updateDeptRowInfo(row)"
               />
               <el-button
+                link
                 type="danger"
                 :icon="Delete"
                 circle
@@ -665,6 +673,7 @@ const exportDeptData = async () => {
   top: 80px;
   width: calc(100% - 199px);
   padding: 26px 32px;
+  transition: all 0.5s;
   .main {
     display: flex;
     flex-direction: column;
@@ -719,7 +728,6 @@ const exportDeptData = async () => {
     }
   }
 }
-
 .left {
   left: 59px;
   width: calc(100% - 59px);

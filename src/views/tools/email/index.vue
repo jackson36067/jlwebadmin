@@ -37,7 +37,10 @@ const sendEmail = () => {
 };
 </script>
 <template>
-  <div :class="['body', { left: isCollapse }]">
+  <div
+    :class="['body', { left: isCollapse }]"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <el-form
       :model="form"
       :rules="emailRules"

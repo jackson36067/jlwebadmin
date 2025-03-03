@@ -125,7 +125,7 @@ const exportLogData = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -147,7 +147,11 @@ const exportLogData = async () => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="query" v-if="showQuery">
         <el-form :model="form" style="max-width: 100%">

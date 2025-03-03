@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, ref, computed } from "vue";
-import { getDeptByIdAPI, getDeptListAPI } from "@/apis/dept"; // 获取部门列表请求
+import { getDeptListAPI } from "@/apis/dept"; // 获取部门列表请求
 import {
   Plus,
   Search,
@@ -22,15 +22,16 @@ import {
 } from "@/apis/user"; // 获取用户列表请求
 // 手动引入ElMesssageBox样式
 import "element-plus/theme-chalk/el-message-box.css";
-import { ElMessage, ElMessageBox, type DropdownInstance } from "element-plus"; // 弹窗
-import { getEnabledJobListAPI, getJobByIdsAPI } from "@/apis/job";
-import { getRoleByIdsAPI, getRoleListAPI } from "@/apis/role";
+import { ElMessage, ElMessageBox, type FormInstance } from "element-plus"; // 弹窗
+import { getEnabledJobListAPI } from "@/apis/job";
+import { getRoleListAPI } from "@/apis/role";
 import {
   formatDateForBackend,
   formatDateToString,
   formatLocalDateTime,
 } from "@/utils/dateFormat";
 import { transformData } from "@/utils/dataFormat";
+import type { rowUser } from "@/types/user";
 
 // 是否折叠左侧菜单
 const isCollapse = inject("isCollapse", ref(false));
@@ -75,10 +76,10 @@ const getUserList = async () => {
 
 // 点击刷新按钮刷新用户信息
 const loading = ref(false);
-const refreshUserInfo = () => {
+const refreshUserInfo = async () => {
   loading.value = true;
+  await getUserList();
   setTimeout(() => {
-    getUserList();
     loading.value = false;
   }, 1000);
 };
@@ -161,7 +162,7 @@ const isShowQuery = () => {
 const updateUserObject = ref({
   enabled: true,
 });
-const changeUserEnabled = (row) => {
+const changeUserEnabled = (row: rowUser) => {
   ElMessageBox.confirm(
     row.enabled === true
       ? '此操作将 "启用" test, 是否继续？'
@@ -249,7 +250,7 @@ const rules = {
   nickName: [{ required: true, trigger: "blur", message: "昵称不能为空" }],
   email: [{ required: true, trigger: "blur", message: "邮箱不能为空" }],
 };
-const dialogAddUserFormRef = ref(null);
+const dialogAddUserFormRef = ref<FormInstance>();
 // 新增用户
 const addUser = () => {
   dialogAddUserFormRef.value.validate(async (valid) => {
@@ -296,7 +297,7 @@ const getUserInfoById = async (id: string) => {
 };
 
 // 修改员工弹窗确认后修改员工
-const dialogUpdateUserFormRef = ref(null);
+const dialogUpdateUserFormRef = ref<FormInstance>();
 
 /**
  * 修改用户
@@ -324,7 +325,7 @@ const updateUser = () => {
  * 删除用户
  */
 const deleteIds: Array<string> = [];
-const deleteUserByUserId = (row: object) => {
+const deleteUserByUserId = (row: rowUser) => {
   ElMessageBox.confirm(
     `此操作将删除用户 ${row.username}, 是否继续？`,
     "Warning",
@@ -358,10 +359,10 @@ const deleteUserByUserId = (row: object) => {
 // 控制修改以及删除以及重置密码按钮是否可用
 const buttonDisabled = ref<boolean>(true);
 // 获取表格多选框选中的内容
-const selectionUserInfo = ref<Array<object>>([]);
+const selectionUserInfo = ref<Array<rowUser>>([]);
 // 有选中的用户选项让修改以及删除以及重置密码按钮可用
 
-const handleSelectionChange = (val: Array<object>) => {
+const handleSelectionChange = (val: Array<rowUser>) => {
   selectionUserInfo.value = val;
   if (selectionUserInfo.value.length >= 1) {
     buttonDisabled.value = false;
@@ -379,7 +380,7 @@ const selectionDeleteUser = async () => {
     type: "warning",
   })
     .then(async () => {
-      selectionUserInfo.value.forEach((item: object) => {
+      selectionUserInfo.value.forEach((item: rowUser) => {
         selectionUserIds.value.push(item.id);
       });
       // 删除用户
@@ -422,7 +423,7 @@ const exportUserInfo = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -444,7 +445,11 @@ const exportUserInfo = async () => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="dept">
         <el-tree-select
@@ -587,49 +592,13 @@ const exportUserInfo = async () => {
             @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" width="55" />
-            <el-table-column
-              fixed
-              prop="username"
-              label="用户名"
-              width="150"
-              align="center"
-            />
-            <el-table-column
-              prop="nickName"
-              label="昵称"
-              width="120"
-              align="center"
-            />
-            <el-table-column
-              prop="gender"
-              label="性别"
-              width="120"
-              align="center"
-            />
-            <el-table-column
-              prop="phone"
-              label="电话"
-              width="160"
-              align="center"
-            />
-            <el-table-column
-              prop="email"
-              label="邮箱"
-              width="160"
-              align="center"
-            />
-            <el-table-column
-              prop="deptName"
-              label="部门"
-              width="120"
-              align="center"
-            />
-            <el-table-column
-              prop="enabled"
-              label="状态"
-              min-width="80"
-              width="100"
-            >
+            <el-table-column prop="username" label="用户名" width="200" />
+            <el-table-column prop="nickName" label="昵称" width="200" />
+            <el-table-column prop="gender" label="性别" width="200" />
+            <el-table-column prop="phone" label="电话" width="200" />
+            <el-table-column prop="email" label="邮箱" width="200" />
+            <el-table-column prop="deptName" label="部门" width="200" />
+            <el-table-column prop="enabled" label="状态" width="200">
               <template #default="{ row }">
                 <el-switch
                   v-model="row.enabled"
@@ -642,21 +611,18 @@ const exportUserInfo = async () => {
                 />
               </template>
             </el-table-column>
-            <el-table-column
-              prop="createTime"
-              label="创建时间"
-              width="200"
-              align="center"
-            />
-            <el-table-column label="Operations" min-width="120">
+            <el-table-column prop="createTime" label="创建时间" width="200" />
+            <el-table-column label="操作" min-width="160" fixed="right">
               <template #default="{ row }">
                 <el-button
+                  link
                   type="warning"
                   :icon="Edit"
                   circle
                   @click="getUserInfoById(row.id)"
                 />
                 <el-button
+                  link
                   type="danger"
                   :icon="Delete"
                   @click="deleteUserByUserId(row)"
@@ -911,15 +877,17 @@ const exportUserInfo = async () => {
   width: calc(100% - 199px);
   padding: 26px 32px;
   .main {
+    width: 100%;
     display: flex;
     flex-direction: row;
     .dept {
-      flex: 1;
+      width: 15%;
       .tree {
         width: 100%;
       }
     }
     .user {
+      width: 85%;
       display: flex;
       flex-direction: column;
       flex: 5;
@@ -971,16 +939,11 @@ const exportUserInfo = async () => {
         }
       }
       .table {
+        // width: 100%;
         margin-top: 30px;
       }
     }
   }
-}
-.demo-pagination-block + .demo-pagination-block {
-  margin-top: 10px;
-}
-.demo-pagination-block .demonstration {
-  margin-bottom: 16px;
 }
 .left {
   left: 59px;

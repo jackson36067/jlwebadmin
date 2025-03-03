@@ -7,6 +7,7 @@ import {
   updateMenuAPI,
 } from "@/apis/menu";
 import SvgIcon from "@/components/svg/svgIcon.vue";
+import type { menuRowInfo, menuUpdateRow, menuVO } from "@/types/menu";
 import {
   formatDateForBackend,
   formatDateToString,
@@ -22,8 +23,8 @@ import {
   Search,
 } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import type { FormInstance } from "element-plus";
 import { inject, onMounted, ref, computed } from "vue";
-
 const collapse = inject("isCollapse");
 
 const showQuery = ref(true);
@@ -41,8 +42,8 @@ const isShowQuery = () => {
 const tableLoad = ref(false);
 
 // 格式化表格数据
-const formatMenuListData = (data: Array<object>) => {
-  return data.map((item: any) => {
+const formatMenuListData = (data: menuVO[]) => {
+  return data.map((item: menuVO) => {
     return {
       id: item.id,
       title: item.title,
@@ -67,8 +68,8 @@ const formatMenuListData = (data: Array<object>) => {
 };
 
 // 将得到的菜单改成Tree展示所需类型
-const formatMenuTreeData = (data: Array<object>) => {
-  return data.map((item: any) => {
+const formatMenuTreeData = (data: menuVO[]) => {
+  return data.map((item: menuVO) => {
     return {
       id: item.id,
       label: item.title,
@@ -105,10 +106,11 @@ onMounted(() => {
 });
 
 // 根据参数获取对象
-const doQueryMenuList = () => {
+const doQueryMenuList = async () => {
+  // 重新获取role数据
   tableLoad.value = true;
+  await getMenuList();
   setTimeout(() => {
-    getMenuList();
     tableLoad.value = false;
   }, 1000);
 };
@@ -128,12 +130,7 @@ const doReset = () => {
 
 // 刷新表格内容
 const refreshMenuTable = () => {
-  // 重新获取role数据
-  tableLoad.value = true;
-  setTimeout(() => {
-    getMenuList();
-    tableLoad.value = false;
-  }, 2000);
+  doQueryMenuList();
 };
 
 // 日期所需快速选择器
@@ -296,10 +293,10 @@ const showAddDialog = () => {
 };
 
 // 新增表格dom对象
-const addFomrRef = ref(null);
+const addFomrRef = ref<FormInstance>();
 // 新增菜单
 const submitFormAndAddMenu = () => {
-  addFomrRef.value.validate(async (valid) => {
+  addFomrRef.value!.validate(async (valid) => {
     if (valid) {
       await addMenuAPI(addForm.value);
       getMenuList();
@@ -314,13 +311,13 @@ const submitFormAndAddMenu = () => {
 // 修改弹窗是否可见
 const dialogUpdateTableVisible = ref<boolean>(false);
 // 修改参数
-const updateForm = ref({
+const updateForm = ref<menuUpdateRow>({
   id: "",
   type: 0, // 菜单类型：目录、菜单、按钮
   icon: "", // 菜单图标
   iFrame: false, // 外链菜单
   cache: false, // 菜单缓存
-  hidden: true, // 菜单可见1
+  hidden: true, // 菜单可见
   title: "", // 菜单标题
   permission: "", // 权限标识
   path: "", // 路由地址
@@ -337,12 +334,25 @@ const selectUpdateMenuIcon = (icon: string) => {
 };
 
 // 点击每一行的修改按钮进行修改当前菜单 (填充原本的数据)
-const getMenuRowInfo = (row: object) => {
+const getMenuRowInfo = (row: menuRowInfo) => {
   dialogUpdateTableVisible.value = true;
-  updateForm.value = row;
-  updateForm.value.cache = updateForm.value.cache === "是" ? true : false;
-  updateForm.value.hidden = updateForm.value.hidden === "是" ? true : false;
-  updateForm.value.iFrame = updateForm.value.iFrame === "是" ? true : false;
+
+  // 局部拷贝并处理类型转换
+  updateForm.value = {
+    id: row.id,
+    type: row.type,
+    icon: row.icon,
+    iFrame: row.iFrame === "是", // 字符串转布尔值
+    cache: row.cache === "是", // 字符串转布尔值
+    hidden: row.hidden === "是", // 字符串转布尔值
+    title: row.title,
+    permission: row.permission,
+    path: row.path,
+    name: row.name,
+    component: row.component,
+    menuSort: row.menuSort,
+    pid: row.pid,
+  };
 };
 
 // 点击弹窗后修改菜单
@@ -358,7 +368,7 @@ const deleteMenuIdList = ref<Array<string>>([]);
 // 表格复选框该改变后触发的方法
 const updateMenuButtonVisable = ref<boolean>(true);
 const deleteMenuButtonVisable = ref<boolean>(true);
-const handleSelectionChange = (row: Array<object>) => {
+const handleSelectionChange = (row: menuRowInfo[]) => {
   deleteMenuButtonVisable.value = false;
   if (row.length === 1) {
     updateMenuButtonVisable.value = false;
@@ -368,7 +378,7 @@ const handleSelectionChange = (row: Array<object>) => {
   }
   // 每次复选框改变时,先清空id,防止id重复
   deleteMenuIdList.value = [];
-  row.forEach((item: object) => {
+  row.forEach((item: menuRowInfo) => {
     deleteMenuIdList.value.push(item.id);
   });
 };
@@ -395,17 +405,19 @@ const deleteMenuList = () => {
 };
 
 // 递归获取子菜单id
-const getSubMenuIdFunction = (data: Array<object>) => {
+const getSubMenuIdFunction = (data: menuRowInfo[]) => {
   if (data) {
     data.forEach((item) => {
       deleteMenuIdList.value.push(item.id);
-      item.children ? getSubMenuIdFunction(item.children) : null;
+      if (item.children && item.children.length) {
+        getSubMenuIdFunction(item.children);
+      }
     });
   }
 };
 
 // 点击每一行的删除按钮,删除该行菜单
-const deleteMenuRowInfo = (row: object) => {
+const deleteMenuRowInfo = (row: menuRowInfo) => {
   // 重置deleteMenuIdList的值,防止删除到被复选框选中的菜单
   deleteMenuIdList.value = [];
   deleteMenuIdList.value.push(row.id);
@@ -423,7 +435,7 @@ const exportMenuData = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -445,7 +457,11 @@ const exportMenuData = async () => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: collapse }">
+  <div
+    class="body"
+    :class="{ left: collapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="query" v-if="showQuery">
         <el-form
@@ -565,28 +581,75 @@ const exportMenuData = async () => {
           @selection-change="handleSelectionChange"
         >
           <el-table-column type="selection" width="55" />
-          <el-table-column prop="title" label="菜单标题" align="center" />
-          <el-table-column prop="icon" label="图标" align="center">
+          <el-table-column
+            prop="title"
+            label="菜单标题"
+            align="center"
+            width="200"
+          />
+          <el-table-column prop="icon" label="图标" align="center" width="200">
             <template #default="{ row }">
               <SvgIcon :name="row.icon" color="#a8abb2" />
             </template>
           </el-table-column>
-          <el-table-column prop="menuSort" label="排序" align="center" />
-          <el-table-column prop="permission" label="权限标识" align="center" />
-          <el-table-column prop="component" label="组件路径" align="center" />
-          <el-table-column prop="iFrame" label="外链" align="center" />
-          <el-table-column prop="cache" label="缓存" align="center" />
-          <el-table-column prop="hidden" label="可见" align="center" />
-          <el-table-column prop="createTime" label="创建日期" align="center" />
-          <el-table-column label="操作" align="center">
+          <el-table-column
+            prop="menuSort"
+            label="排序"
+            align="center"
+            width="200"
+          />
+          <el-table-column
+            prop="permission"
+            label="权限标识"
+            align="center"
+            width="200"
+          />
+          <el-table-column
+            prop="component"
+            label="组件路径"
+            align="center"
+            width="200"
+          />
+          <el-table-column
+            prop="iFrame"
+            label="外链"
+            align="center"
+            width="200"
+          />
+          <el-table-column
+            prop="cache"
+            label="缓存"
+            align="center"
+            width="200"
+          />
+          <el-table-column
+            prop="hidden"
+            label="可见"
+            align="center"
+            width="200"
+          />
+          <el-table-column
+            prop="createTime"
+            label="创建日期"
+            align="center"
+            width="200"
+          />
+          <el-table-column
+            label="操作"
+            align="center"
+            fixed="right"
+            min-width="160px"
+          >
             <template #default="{ row }">
               <el-button
+                link
                 type="warning"
                 :icon="Edit"
                 circle
                 @click="getMenuRowInfo(row)"
               />
               <el-button
+                link
                 type="danger"
                 :icon="Delete"
                 circle
@@ -922,6 +985,7 @@ const exportMenuData = async () => {
   width: calc(100% - 199px);
   padding: 26px 32px;
   .main {
+    width: 100%;
     display: flex;
     flex-direction: column;
     .query {
@@ -971,6 +1035,7 @@ const exportMenuData = async () => {
       }
     }
     .table {
+      width: 100%;
       margin-top: 30px;
     }
   }
@@ -981,16 +1046,6 @@ const exportMenuData = async () => {
   height: 26px;
   margin: 28px 0 0 10px;
 }
-// .custom-tabs ::v-deep .el-tabs__header {
-//   background-color: #fff;
-//   color: #000;
-// }
-// .custom-tabs ::v-deep .el-tabs__item.is-active {
-//   color: #fff;
-//   background-color: #000;
-//   border-radius: 5px;
-//   overflow: hidden;
-// }
 
 .addIcon {
   display: inline-block;

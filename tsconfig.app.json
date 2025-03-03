@@ -5,10 +5,12 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["src/*"]
+    },
+    "noEmitOnError": false, // 不在发生类型错误时阻止输出文件
+    "skipLibCheck": true, // 跳过库文件的类型检查
+    "strict": false // 关闭严格模式，允许更宽松的类型检查
   }
 }

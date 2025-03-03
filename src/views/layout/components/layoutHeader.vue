@@ -7,7 +7,7 @@ import { useLoginStore } from "@/stores/LoginStore";
 import { useBreadcrumbStore } from "@/stores/BreadcrumbStore";
 import { useTagsStore } from "@/stores/TagStore";
 import { useDefaultActiveMenuStore } from "@/stores/DefaultActiveMenuStore";
-import 'element-plus/es/components/message-box/style/css'
+import "element-plus/es/components/message-box/style/css";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 const isCollapse = inject("isCollapse", ref(false));
@@ -117,7 +117,11 @@ const formatMenu = (menuVOList) => {
 };
 
 // 将菜单结构扁平化为一维数组
-const flatMenu = ref<Array<object>>([]);
+interface flatMenuItem {
+  label: string;
+  path: string;
+}
+const flatMenu = ref<flatMenuItem[]>([]);
 const flattenMenu = (tree, parentPath = "") => {
   tree.forEach((menu) => {
     const currentLabel = parentPath
@@ -194,7 +198,13 @@ const toCenter = () => {
   <div class="header" :class="{ left: isCollapse }">
     <div class="menu-index">
       <a href="#" @click="doCollapse">
-        <svgIcon name="list" class="svg-icon" width="30px" height="20px" />
+        <svgIcon
+          name="list"
+          class="svg-icon"
+          width="30px"
+          height="20px"
+          color="#707070"
+        />
       </a>
       <span>
         <el-breadcrumb separator="/" style="color: #afbccd">
@@ -308,7 +318,7 @@ const toCenter = () => {
       </a>
       <a href="#">
         <el-dropdown placement="bottom" trigger="click" class="dropdown">
-          <img :src="loginStore.userInfo.avatarPath" alt="" class="img" />
+          <el-avatar :src="loginStore.userInfo.avatarPath" alt="" class="img" />
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="drawer = true"
@@ -350,13 +360,16 @@ const toCenter = () => {
 </template>
 <style lang="scss">
 .header {
-  position: absolute;
+  position: fixed;
+  z-index: 999;
   top: 0;
   left: 199px;
   width: calc(100% - 199px);
   height: 50px;
   border-bottom: 1px solid #dadcdf;
   box-sizing: border-box;
+  transition: all 0.3s;
+  // background-color: #fff;
   .menu-index {
     display: flex;
     float: left;

@@ -53,7 +53,10 @@ const goTo = (tag: view) => {
 const isShowTag = inject("isShowTag", ref(true));
 </script>
 <template>
-  <div class="menu-tap" :class="{ updateWidth: isCollapse }" v-if="isShowTag">
+  <div
+    class="menu-tap"
+    :class="[{ updateWidth: isCollapse }, { showTag: !isShowTag }]"
+  >
     <el-tag
       v-for="tag in tagsStore.visitedViews"
       :key="tag.path"
@@ -68,7 +71,8 @@ const isShowTag = inject("isShowTag", ref(true));
 </template>
 <style scoped lang="scss">
 .menu-tap {
-  position: absolute;
+  position: fixed;
+  z-index: 99;
   top: 50px;
   left: 199px;
   width: calc(100% - 199px);
@@ -76,6 +80,8 @@ const isShowTag = inject("isShowTag", ref(true));
   box-shadow: 0 2px #dadcdf;
   padding-left: 6px;
   box-sizing: border-box;
+  transition: all 0.3s;
+  // background-color: #fff;
 }
 .active-tag {
   display: inline-block;
@@ -113,5 +119,9 @@ const isShowTag = inject("isShowTag", ref(true));
 .updateWidth {
   left: 59px;
   width: calc(100% - 59px);
+}
+.showTag {
+  box-shadow: none;
+  display: none;
 }
 </style>

@@ -4,6 +4,7 @@ import {
   forceWithdrawUserAPI,
   getOnlineUserAPI,
 } from "@/apis/user";
+import type { rowInfo } from "@/types/online";
 import { formatDateToString } from "@/utils/dateFormat";
 import {
   Delete,
@@ -85,9 +86,9 @@ const doReset = () => {
 const withdrawalButtonDisabled = ref(true);
 
 // 拉黑用户ip数据
-const forceUserIpArray = ref([]);
+const forceUserIpArray = ref<string[]>([]);
 // 表格多选框改变监听事件
-const handleSelectionChange = (row: Array<object>) => {
+const handleSelectionChange = (row: rowInfo[]) => {
   if (row.length > 0) {
     withdrawalButtonDisabled.value = false;
   } else {
@@ -100,7 +101,7 @@ const handleSelectionChange = (row: Array<object>) => {
 };
 
 // 点击每一行的拉黑按钮,拉黑该用户
-const doRowBlockUser = (row: object) => {
+const doRowBlockUser = (row: rowInfo) => {
   forceUserIpArray.value = [];
   forceUserIpArray.value.push(row.ipAddress);
   forceWithdrawUser(row.ipAddress);
@@ -132,7 +133,7 @@ const exportOnlineUserInfo = async () => {
   await exportOnlineUserInfoAPI()
     .then((data) => {
       const url = URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -155,7 +156,11 @@ const exportOnlineUserInfo = async () => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="query" v-if="showQuery">
         <el-form
@@ -241,22 +246,53 @@ const exportOnlineUserInfo = async () => {
             @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" width="55" />
-            <el-table-column prop="username" label="用户名" align="center" />
-            <el-table-column prop="name" label="用户昵称" align="center" />
-            <el-table-column prop="deptName" label="部门" align="center" />
-            <el-table-column prop="ipAddress" label="登录IP" align="center" />
+            <el-table-column
+              prop="username"
+              label="用户名"
+              align="center"
+              width="200"
+            />
+            <el-table-column
+              prop="name"
+              label="用户昵称"
+              align="center"
+              width="200"
+            />
+            <el-table-column
+              prop="deptName"
+              label="部门"
+              align="center"
+              width="200"
+            />
+            <el-table-column
+              prop="ipAddress"
+              label="登录IP"
+              align="center"
+              width="200"
+            />
             <el-table-column
               prop="loginLocation"
               label="登录地址"
               align="center"
+              width="200"
             />
-            <el-table-column prop="browser" label="浏览器" align="center" />
-            <el-table-column prop="loginTime" label="登录时间" align="center" />
-            <el-table-column label="操作" width="100px">
+            <el-table-column
+              prop="browser"
+              label="浏览器"
+              align="center"
+              width="200"
+            />
+            <el-table-column
+              prop="loginTime"
+              label="登录时间"
+              align="center"
+              width="200"
+            />
+            <el-table-column label="操作" min-width="120" fixed="right">
               <template #default="{ row }">
                 <el-link
                   type="info"
-                  style="margin-right: 10px; color: #000"
+                  style="margin-right: 10px"
                   @click="doRowBlockUser(row)"
                 >
                   拉黑
@@ -288,6 +324,7 @@ const exportOnlineUserInfo = async () => {
   width: calc(100% - 199px);
   padding: 26px 32px;
   .main {
+    width: 100%;
     display: flex;
     flex-direction: column;
     .query {
@@ -337,6 +374,7 @@ const exportOnlineUserInfo = async () => {
       }
     }
     .table {
+      width: 100%;
       margin-top: 70px;
     }
   }

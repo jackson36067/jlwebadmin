@@ -23,7 +23,6 @@ const showProgress = ref(false); // 控制进度条显示
 watch(
   () => route.fullPath,
   async () => {
-    console.log(showProgress.value);
     showProgress.value = true; // 显示进度条
     setTimeout(() => {
       showProgress.value = false; // 隐藏进度条并切换组件
@@ -41,30 +40,40 @@ watch(
     <layoutHeader />
     <layoutMenu />
     <!-- 路由视图 -->
-    <router-view v-slot="{ Component }">
+    <router-view
+      v-slot="{ Component }"
+      style="transition: all 0.3s; z-index: 9; overflow: hidden"
+      :class="[{ updateTop: !isShowTag }]"
+    >
       <component v-if="!showProgress" :is="Component" />
     </router-view>
     <layoutFooter />
   </div>
 </template>
 
-<style>
+<style lang="scss">
+body {
+  height: 100%;
+}
 /* 进度条样式 */
 .layout {
+  display: flex;
   width: 100%;
   position: relative; /* 给进度条提供定位参考 */
-}
-.progress-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 2px;
-  background: #2299dd;
-  width: 0;
-  transition: width 0.5s;
-}
-
-.toright {
-  width: 100%;
+  height: 100%;
+  // background-color: #fff;
+  .progress-bar {
+    z-index: 99999;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: #2299dd;
+    width: 0;
+    transition: width 0.5s;
+  }
+  .toright {
+    width: 100%;
+  }
 }
 </style>

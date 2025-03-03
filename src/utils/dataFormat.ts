@@ -1,6 +1,6 @@
 // 封装生成select-tree数据函数
-export function transformData(data: any) {
-  return data.map((item: any) => {
+export function transformData(data) {
+  return data.map((item) => {
     return {
       value: item.id,
       label: item.name,

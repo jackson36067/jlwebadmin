@@ -3,6 +3,7 @@ import Background from "@/assets/images/girl.jpg";
 import { useLoginStore } from "@/stores/LoginStore";
 import { onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
+import type { FormInstance } from "element-plus";
 import "element-plus/theme-chalk/el-message.css";
 import router from "@/router";
 import svgIcon from "@/components/svg/svgIcon.vue";
@@ -14,7 +15,7 @@ const loginForm = ref({
   password: "123456",
   code: "",
 });
-const loginRef = ref(null);
+const loginRef = ref<FormInstance>();
 const loginRules = {
   username: [{ required: true, trigger: "blur", message: "用户名不能为空" }],
   password: [{ required: true, trigger: "blur", message: "密码不能为空" }],
@@ -51,14 +52,14 @@ const login = async () => {
 };
 
 const doLogin = () => {
-  loginRef.value.validate((valid) => {
+  loginRef.value!.validate((valid) => {
     if (valid) {
       login();
     }
   });
 };
 const handleKeydown = (event) => {
-  loginRef.value.validate((valid) => {
+  loginRef.value!.validate((valid) => {
     if (valid) {
       if (event.key === "Enter") {
         login();
@@ -71,7 +72,9 @@ document.addEventListener("keydown", handleKeydown);
 // 获取验证码接口
 const getCode = async () => {
   const res = await getCodeAPI();
-  codeUrl.value = URL.createObjectURL(new Blob([res], { type: "image/png" }));
+  // console.log(res.data);
+  const blob = new Blob([res.data], { type: "image/png" });
+  codeUrl.value = URL.createObjectURL(blob);
 };
 onMounted(() => {
   getCode();

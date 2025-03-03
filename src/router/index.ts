@@ -41,7 +41,7 @@ router.beforeEach(async (to, from, next) => {
           next({ ...to, replace: true });
         } catch {
           // 处理错误，清除token并跳转登录页
-          loginStore.userInfo = {};
+          loginStore.clearLoginData();
           next("/login");
         }
       } else {

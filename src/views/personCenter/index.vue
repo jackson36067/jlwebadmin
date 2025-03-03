@@ -19,6 +19,7 @@ import {
 } from "@/apis/user";
 import { ElMessage } from "element-plus";
 import type { UploadProps } from "element-plus";
+import type { FormInstance } from "element-plus";
 
 const isCollapse = inject("isCollapse", ref(false));
 
@@ -77,7 +78,11 @@ const rules = {
       message: "手机号码不能为空",
     },
     {
-      validator: (rule, value, callback) => {
+      validator: (
+        rules: any,
+        value: string,
+        callback: (error?: Error) => void
+      ) => {
         const phoneRegex = /^\d{11}$/;
         if (!phoneRegex.test(value)) {
           callback(new Error("手机号必须是11位数字"));
@@ -90,10 +95,10 @@ const rules = {
   ],
 };
 
-const formRef = ref(null);
+const formRef = ref<FormInstance>();
 // 修改用户信息
 const updateUserInfo = () => {
-  formRef.value.validate(async (valid) => {
+  formRef.value!.validate(async (valid) => {
     if (valid) {
       await updateUserByUserIdAPI(userInfo.id, userForm.value);
       // 修改pinia中User信息
@@ -119,10 +124,10 @@ const emailRules = {
   verifyCode: [{ required: true, message: "请输入验证码", trigger: "blur" }],
   password: [{ required: true, message: "请输入当前密码", trigger: "blur" }],
 };
-const emailForm = ref(null);
+const emailForm = ref<FormInstance>();
 const codeLoading = ref(false);
 const getVerifyCode = () => {
-  emailForm.value.validateField("newEmail", async (valid) => {
+  emailForm.value!.validateField("newEmail", async (valid) => {
     if (valid) {
       codeLoading.value = true;
       try {
@@ -140,7 +145,7 @@ const getVerifyCode = () => {
 
 // 修改邮箱
 const updateEmail = () => {
-  emailForm.value.validate(async (valid) => {
+  emailForm.value!.validate(async (valid) => {
     if (valid) {
       await updateEmailAPI(updateEmailForm.value);
       loginStore.updateUserEmail(updateEmailForm.value.newEmail);
@@ -166,7 +171,7 @@ const passwrodRules = {
     { required: true, message: "请再一次输入新密码", trigger: "blur" },
   ],
 };
-const passwordRef = ref(null);
+const passwordRef = ref<FormInstance>();
 const updatePassword = () => {
   if (
     updatePasswordForm.value.newPassword !==
@@ -174,7 +179,7 @@ const updatePassword = () => {
   ) {
     ElMessage({ type: "warning", message: "两次密码不一致" });
   }
-  passwordRef.value.validate(async (valid) => {
+  passwordRef.value!.validate(async (valid) => {
     if (valid) {
       await updatePasswordAPI(updatePasswordForm.value);
       ElMessage({ type: "success", message: "修改密码成功" });
@@ -201,14 +206,18 @@ const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
 };
 
 // 上传图片成功后执行的方法
-const handleAvatarSuccess = async (reponse) => {
+const handleAvatarSuccess: UploadProps["onSuccess"] = async (reponse) => {
   const avatar: string = reponse.data;
   await updateUserByUserIdAPI(userInfo.id, { avatarPath: avatar });
   loginStore.updateUserAvatarPath(avatar);
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="personal-info">
       <!-- 左侧信息栏 -->
       <div class="left-panel">

@@ -7,7 +7,6 @@ import {
   Search,
   Delete,
 } from "@element-plus/icons-vue";
-import { table } from "console";
 import { ElMessage } from "element-plus";
 import { computed, inject, onMounted, ref } from "vue";
 
@@ -125,7 +124,7 @@ const exportLogData = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -157,7 +156,11 @@ const showExceptionDetail = (rowExceptionDetail: string) => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="query" v-if="showQuery">
         <el-form :model="form" style="max-width: 100%">
@@ -274,11 +277,11 @@ const showExceptionDetail = (rowExceptionDetail: string) => {
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="用户名" prop="username" />
-            <el-table-column label="IP" prop="requestIp" />
-            <el-table-column label="IP来源" prop="address" />
-            <el-table-column label="描述" prop="description" />
-            <el-table-column label="浏览器" prop="browser" />
+            <el-table-column label="用户名" prop="username" width="200" />
+            <el-table-column label="IP" prop="requestIp" width="200" />
+            <el-table-column label="IP来源" prop="address" width="200" />
+            <el-table-column label="描述" prop="description" width="200" />
+            <el-table-column label="浏览器" prop="browser" width="200" />
             <el-table-column
               label="创建时间"
               prop="createTime"
@@ -329,6 +332,7 @@ const showExceptionDetail = (rowExceptionDetail: string) => {
   width: calc(100% - 199px);
   padding: 26px 32px;
   .main {
+    width: 100%;
     display: flex;
     flex-direction: column;
     .query {
@@ -378,6 +382,7 @@ const showExceptionDetail = (rowExceptionDetail: string) => {
       }
     }
     .table {
+      width: 100%;
       margin-top: 70px;
     }
   }

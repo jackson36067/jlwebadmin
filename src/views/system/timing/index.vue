@@ -10,6 +10,7 @@ import {
   resumeTaskAPI,
   updateTaskAPI,
 } from "@/apis/timgin";
+import type { rowTiming } from "@/types/timing";
 import {
   formatDateForBackend,
   formatDateToString,
@@ -24,8 +25,7 @@ import {
   RefreshRight,
   Download,
 } from "@element-plus/icons-vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { M } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
+import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
 import { computed, inject, onMounted, ref } from "vue";
 
 const isCollapse = inject("isCollapse");
@@ -87,7 +87,7 @@ const taskList = ref([]);
 const total = ref(1);
 const getTaskList = async () => {
   const res = await getTaskListAPI(queryParams.value);
-  res.data.list.forEach((item) => {
+  res.data.list.forEach((item: rowTiming) => {
     item.createTime = formatLocalDateTime(item.createTime);
   });
   taskList.value = res.data.list;
@@ -131,12 +131,10 @@ const doReset = () => {
   refreshInfo();
 };
 
-const refreshTaskInfo = () => {
+const refreshTaskInfo = async () => {
   loading.value = true;
-  setTimeout(() => {
-    getTaskList();
-    loading.value = false;
-  }, 1000);
+  await getTaskList();
+  loading.value = false;
 };
 
 // 新增任务对话框可见性
@@ -156,7 +154,7 @@ const dialogAddForm = ref({
 // 新增弹窗中表单校验规则
 
 // 新增弹窗中表单dom对象
-const dialogAddTaskFormRef = ref(null);
+const dialogAddTaskFormRef = ref<FormInstance>();
 const rules = ref({
   jobName: [{ required: true, trigger: "blur", message: "请输入任务名称" }],
   jobGroup: [{ required: true, trigger: "blur", message: "请输入任务分组" }],
@@ -183,7 +181,7 @@ const doAddTask = () => {
   });
 };
 // 任务暂停时,点击执行任务
-const resumeTask = async (row: object) => {
+const resumeTask = async (row: rowTiming) => {
   if (!row.isPause) {
     ElMessage({ type: "warning", message: "任务已经执行" });
     return;
@@ -195,7 +193,7 @@ const resumeTask = async (row: object) => {
   ElMessage({ type: "success", message: "执行任务成功" });
 };
 
-const pauseTask = async (row: object) => {
+const pauseTask = async (row: rowTiming) => {
   if (row.isPause) {
     ElMessage({ type: "warning", message: "任务已经暂停" });
     return;
@@ -222,7 +220,7 @@ const dialogUpdateForm = ref({
 });
 
 // 封装信息
-const getTaskInfo = async (row: object) => {
+const getTaskInfo = async (row: rowTiming) => {
   dialogUpdateTableVisible.value = true;
   // 获取该行的任务信息
   const res = await getTaskInfoByIdAPI(row.id);
@@ -230,7 +228,7 @@ const getTaskInfo = async (row: object) => {
 };
 
 // 编辑任务信息
-const dialogUpdateTaskFormRef = ref(null);
+const dialogUpdateTaskFormRef = ref<FormInstance>();
 const doUpdateTask = () => {
   dialogUpdateTaskFormRef.value.validate(async (valid) => {
     if (valid) {
@@ -248,7 +246,7 @@ const doUpdateTask = () => {
 const deleteTaskList = ref([]);
 const updateButtonVisible = ref(true);
 const deleteButtonVisible = ref(true);
-const handleSelectionChange = (row) => {
+const handleSelectionChange = (row: rowTiming[]) => {
   deleteButtonVisible.value = false;
   if (row.length == 0) {
     deleteButtonVisible.value = true;
@@ -376,7 +374,7 @@ const exportTaskData = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -406,7 +404,7 @@ const exportTaskLogData = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -429,7 +427,11 @@ const exportTaskLogData = async () => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="query" v-if="showQuery">
         <el-form
@@ -553,21 +555,18 @@ const exportTaskLogData = async () => {
         >
           <el-table-column type="selection" width="55" />
           <el-table-column
-            fixed
             prop="id"
             label="任务ID"
-            width="150"
+            width="200"
             align="center"
           />
           <el-table-column
-            fixed
             prop="jobName"
             label="任务名称"
-            width="150"
+            width="200"
             align="center"
           />
           <el-table-column
-            fixed
             prop="jobGroup"
             label="任务分组"
             width="150"
@@ -576,13 +575,13 @@ const exportTaskLogData = async () => {
           <el-table-column
             prop="className"
             label="class名称"
-            width="150"
+            width="200"
             align="center"
           />
           <el-table-column
             prop="cronExpression"
             label="cron表达式"
-            width="160"
+            width="200"
             align="center"
           />
           <el-table-column
@@ -612,30 +611,34 @@ const exportTaskLogData = async () => {
             width="200"
             align="center"
           />
-          <el-table-column label="操作" min-width="100" align="center">
+          <el-table-column label="操作" min-width="200" fixed="right">
             <template #default="{ row }">
               <el-link
                 type="info"
-                style="margin-right: 10px; color: #000"
+                style="margin-right: 10px"
                 @click="getTaskInfo(row)"
+                :underline="false"
                 >编辑</el-link
               >
               <el-link
                 type="info"
-                style="margin-right: 10px; color: #000"
+                style="margin-right: 10px"
                 @click="resumeTask(row)"
+                :underline="false"
                 >执行</el-link
               >
               <el-link
                 type="info"
-                style="margin-right: 10px; color: #000"
+                style="margin-right: 10px"
                 @click="pauseTask(row)"
+                :underline="false"
                 >暂停</el-link
               >
               <el-link
                 type="info"
-                style="color: #000"
+                style=""
                 @click="deleteTaskRowInfo(row)"
+                :underline="false"
                 >删除</el-link
               >
             </template>
@@ -916,16 +919,23 @@ const exportTaskLogData = async () => {
   </el-dialog>
 </template>
 <style scoped lang="scss">
-.boby {
-  box-sizing: border-box;
+.body {
+  // box-sizing: border-box;
   position: absolute;
   left: 199px;
   top: 80px;
   width: calc(100% - 199px);
   padding: 26px 32px;
   .main {
+    width: 100%;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    .query {
+      display: block;
+      .form-item {
+        float: left;
+      }
+    }
     .button {
       .operate {
         float: left;
@@ -966,30 +976,26 @@ const exportTaskLogData = async () => {
         }
       }
     }
-  }
-}
-.table {
-  margin-top: 30px;
-  .pause {
-    color: #e7a753;
-    background-color: #fdf6ec;
-  }
-  .resume {
-    background-color: #f0f9eb;
-    color: #74c550;
-  }
-  .error {
-    background-color: #fef0f0;
-    color: #f69896;
+    .table {
+      width: 100%;
+      margin-top: 30px;
+
+      .pause {
+        color: #e7a753;
+        background-color: #fdf6ec;
+      }
+      .resume {
+        background-color: #f0f9eb;
+        color: #74c550;
+      }
+      .error {
+        background-color: #fef0f0;
+        color: #f69896;
+      }
+    }
   }
 }
 
-.query {
-  display: block;
-  .form-item {
-    float: left;
-  }
-}
 .left {
   left: 59px;
   width: calc(100% - 59px);

@@ -9,15 +9,14 @@ const httpInstance = axios.create({
   timeout: 5000,
 });
 // 验证码
-const captcha = ref("");
+const code = ref("");
 httpInstance.interceptors.request.use(
   (config) => {
     // 发起请求时携带验证码
     if (config.headers.code == null) {
-      config.headers.Code = captcha.value;
+      config.headers.Code = code.value;
     }
     const loginStore = useLoginStore();
-    // @ts-ignore
     const token: string = loginStore.userInfo.token;
     if (token) {
       config.headers.Authorization = token;
@@ -35,7 +34,22 @@ httpInstance.interceptors.response.use(
     // 当获取验证码时使用header保存验证码
     const headers = config.headers;
     if (headers["code"] != null) {
-      captcha.value = headers["code"];
+      code.value = headers["code"];
+    }
+    // 下载文件,获取图片的接口走这里
+    const urls = [
+      "user/code",
+      "log/export",
+      "menu/export",
+      "dept/export",
+      "role/export",
+      "quartz/export",
+      "quartz/log/export",
+      "user/export",
+      "user/online/export",
+    ];
+    if (urls.includes(config.config.url)) {
+      return config;
     }
     return config.data;
   },

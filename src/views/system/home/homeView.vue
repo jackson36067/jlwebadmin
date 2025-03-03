@@ -3,7 +3,6 @@ import svgIcon from "@/components/svg/svgIcon.vue";
 import { inject, onMounted, ref } from "vue";
 import * as echarts from "echarts";
 import { useTransition } from "@vueuse/core";
-// import { makeBackground } from "echarts/types/src/component/helper/listComponent.js";
 
 // 是否折叠左侧菜单
 const isCollapse = inject("isCollapse", ref(false));
@@ -107,6 +106,9 @@ onMounted(() => {
         },
         emphasis: {
           focus: "series",
+        },
+        areaStyle: {
+          color: "#f4f8fd", // 阴影背景颜色（渐变色或透明色）
         },
       },
     ],
@@ -567,7 +569,7 @@ shoppingValue.value = 13600;
         .svg-bgc-icon {
           width: 75px;
           height: 75px;
-          background-color: #fff;
+          // background-color: #fff;
           margin-left: 30px;
           text-align: center;
           line-height: 75px;
@@ -591,7 +593,7 @@ shoppingValue.value = 13600;
             margin-bottom: 12px;
           }
           .panel-num {
-            color: #666;
+            // color: #666;
             font-size: 20px;
             font-weight: 700;
           }

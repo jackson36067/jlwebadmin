@@ -5,6 +5,7 @@ class WebSocketClient {
   private reconnectDelay: number; // 重连延迟
   private maxReconnectAttempts: number; // 最大重连次数
   private reconnectAttempts: number = 0; // 当前重连次数
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   private eventHandlers: { [key: string]: Function[] } = {}; // 自定义事件处理
 
   constructor(url: string, reconnectDelay = 3000, maxReconnectAttempts = 10) {
@@ -67,7 +68,7 @@ class WebSocketClient {
    * 发送消息
    * @param message 消息内容
    */
-  public send(message: any): void {
+  public send(message): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(
         typeof message === "string" ? message : JSON.stringify(message)
@@ -83,6 +84,7 @@ class WebSocketClient {
    * @param event 事件名 ("open" | "message" | "error" | "close")
    * @param handler 事件处理函数
    */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   public on(event: string, handler: Function): void {
     if (!this.eventHandlers[event]) {
       this.eventHandlers[event] = [];
@@ -95,6 +97,7 @@ class WebSocketClient {
    * @param event 事件名
    * @param handler 事件处理函数
    */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   public off(event: string, handler: Function): void {
     if (this.eventHandlers[event]) {
       this.eventHandlers[event] = this.eventHandlers[event].filter(
@@ -108,7 +111,7 @@ class WebSocketClient {
    * @param event 事件名
    * @param args 参数
    */
-  private emit(event: string, ...args: any[]): void {
+  private emit(event: string, ...args): void {
     if (this.eventHandlers[event]) {
       this.eventHandlers[event].forEach((handler) => handler(...args));
     }

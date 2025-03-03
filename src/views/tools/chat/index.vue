@@ -11,10 +11,10 @@ import {
   watch,
 } from "vue";
 import { useLoginStore } from "@/stores/LoginStore";
-const isCollapse = inject("isCollapse");
-import WebSocketClient from "@/utils/websocket";
+import WebSocketClient from "@/utils/webSocket";
 import type { ElScrollbar } from "element-plus";
 
+const isCollapse = inject("isCollapse");
 // ... 其他导入和类型定义 ...
 
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>();
@@ -27,15 +27,23 @@ const loginStore = useLoginStore();
 const username = loginStore.userInfo.username;
 
 const currentChat = ref({
-  id: 0,
+  id: "0",
   username: "",
-  avatar: "",
+  avatarPath: "",
   content: "",
   lastTime: "",
 });
 const wsClient = new WebSocketClient(`ws://localhost:8080/chat?${username}`);
 
-const friendList = ref([]);
+type friend = {
+  id: string;
+  username: string;
+  avatarPath: string;
+  lastMessage: string;
+  lastTime: string;
+};
+
+const friendList = ref<friend[]>([]);
 const getAllFriendList = async () => {
   const res = await getUserFriendListAPI(username);
   friendList.value = res.data;
@@ -47,8 +55,8 @@ onMounted(() => {
 // 搜索过滤
 const filteredFriends = computed(() => {
   if (!searchKey.value) return friendList.value;
-  return friendList.value.filter((friend) =>
-    friend.name.toLowerCase().includes(searchKey.value.toLowerCase())
+  return friendList.value.filter((friend: friend) =>
+    friend.username.toLowerCase().includes(searchKey.value.toLowerCase())
   );
 });
 
@@ -89,11 +97,17 @@ wsClient.on("message", (data) => {
 });
 
 // 选择聊天对象
-const selectChat = (friend) => {
+const selectChat = (friend: friend) => {
   // 连接 WebSocket
   wsClient.connect();
-  currentChat.value = friend;
   getUsersMessage(username, friend.username);
+  currentChat.value = {
+    id: friend.id,
+    username: friend.username,
+    avatarPath: friend.avatarPath,
+    content: messageList.value[messageList.value.length - 1],
+    lastTime: "昨天",
+  };
   // shouldAutoScroll.value = true;
 };
 
@@ -113,7 +127,11 @@ const sendMessage = () => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="page-container">
       <!-- 左侧聊天区域 -->
       <div class="chat-container">
@@ -180,7 +198,7 @@ const sendMessage = () => {
               ]"
               @click="selectChat(friend)"
             >
-              <el-avatar :size="40" :src="friend.avatar" />
+              <el-avatar :size="40" :src="friend.avatarPath" />
               <div class="friend-info">
                 <div class="friend-name">{{ friend.username }}</div>
                 <div class="friend-message">{{ friend.lastMessage }}</div>

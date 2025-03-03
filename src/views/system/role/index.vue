@@ -18,13 +18,16 @@ import {
   updateRoleMenuAPI,
 } from "@/apis/role";
 import { getMenuListAPI } from "@/apis/menu";
-import { useLoginStore } from "@/stores/LoginStore";
 import {
   formatDateForBackend,
   formatDateToString,
   formatLocalDateTime,
 } from "@/utils/dateFormat";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
+import type { rowRole } from "@/types/role";
+import type { menuVO } from "@/types/menu";
+import { ElTree } from "element-plus";
+import type { TreeNodeData } from "element-plus/es/components/tree-v2/src/types.mjs";
 
 interface Tree {
   label: string;
@@ -84,7 +87,7 @@ const exportButton = ref(true);
 
 // 表格数据
 const total = ref(1);
-const roleList = ref<Array<object>>([]);
+const roleList = ref<rowRole[]>([]);
 const getRoleList = async () => {
   const res = await getRoleWithPagingAPI(queryParams.value);
   roleList.value = res.data.list;
@@ -99,11 +102,11 @@ const getRoleList = async () => {
 
 // 点击刷新按钮刷新角色信息
 const loading = ref(false);
-const refreshUserInfo = () => {
+const refreshUserInfo = async () => {
   loading.value = true;
+  await getRoleList();
   setTimeout(() => {
     // 重新获取角色数据
-    getRoleList();
     loading.value = false;
   }, 1000);
 };
@@ -149,8 +152,8 @@ const isShowQuery = () => {
 };
 
 // 将得到的菜单改成Tree展示所需类型
-const formatMenuListData = (data: Array<object>) => {
-  return data.map((item: any) => {
+const formatMenuListData = (data: menuVO[]) => {
+  return data.map((item: menuVO) => {
     return {
       id: item.id,
       label: item.title,
@@ -162,7 +165,7 @@ const formatMenuListData = (data: Array<object>) => {
 };
 
 // 右侧菜单栏获取
-const menuList = ref<Array<object>>([]);
+const menuList = ref<menuVO[]>([]);
 const menuData = ref<Tree[]>([]);
 const getMenuList = async () => {
   const res = await getMenuListAPI({});
@@ -186,8 +189,8 @@ const saveButton = ref(true);
 const roleId = ref("");
 // 当点击表格中的单元格时配置默认要选中的菜单
 // treeref
-const treeRef = ref(null);
-const rowClick = (role) => {
+const treeRef = ref<InstanceType<typeof ElTree>>();
+const rowClick = (role: rowRole) => {
   treeRef.value.setCheckedKeys(role.menuIdList, false);
   saveButton.value = false;
   roleId.value = role.id;
@@ -230,7 +233,7 @@ const addRoleParams = ref({
 });
 
 // 弹窗表格dom对象
-const addDialogFormRef = ref(null);
+const addDialogFormRef = ref<FormInstance>();
 
 // 弹窗表格鉴定规则
 const rules = {
@@ -239,7 +242,7 @@ const rules = {
 };
 
 // 权限选择树dom元素
-const permissionSelectRef = ref(null);
+const permissionSelectRef = ref<InstanceType<typeof ElTree>>();
 
 // 新增用户
 const doAddRole = () => {
@@ -250,8 +253,9 @@ const doAddRole = () => {
       if (addRoleParams.value.dataScope === "自定义") {
         // 获取自定义时选择的菜单(得到菜单的id数组)
         if (permissionSelectRef.value.getCheckedNodes() !== null) {
-          const permissionNodes = permissionSelectRef.value.getCheckedNodes();
-          permissionNodes.forEach((element: object) => {
+          const permissionNodes: TreeNodeData[] =
+            permissionSelectRef.value.getCheckedNodes();
+          permissionNodes.forEach((element: TreeNodeData) => {
             selectPermissionIdList.value.push(element.id);
           });
         }
@@ -295,10 +299,10 @@ const updatePermissionSelectRef = ref(null);
 const deleteRoleIds = ref<Array<string>>([]);
 
 // 当复选框发生变化时触发该函数
-const handleSelectionChange = (val: Array<object>) => {
+const handleSelectionChange = (val: rowRole[]) => {
   updateButtonDisabled.value = true;
   // 如果只选中一个那么就可以使用修改
-  if (val.length == 1) {
+  if (val.length === 1) {
     updateButtonDisabled.value = false;
     // 封装角色原本内容
     updateRoleParams.value.id = val[0].id;
@@ -325,7 +329,7 @@ const updateRole = () => {
   dialogUpdateVisible.value = true;
 };
 
-const updateDialogFormRef = ref(null);
+const updateDialogFormRef = ref<FormInstance>();
 
 // 修改角色
 const doUpdateRole = () => {
@@ -338,7 +342,7 @@ const doUpdateRole = () => {
         if (updatePermissionSelectRef.value.getCheckedNodes() !== null) {
           const permissionNodes =
             updatePermissionSelectRef.value.getCheckedNodes();
-          permissionNodes.forEach((element: object) => {
+          permissionNodes.forEach((element: TreeNodeData) => {
             selectPermissionIdList.value.push(element.id);
           });
         }
@@ -379,7 +383,7 @@ const exportRoleData = async () => {
         return;
       }
       const url = window.URL.createObjectURL(
-        new Blob([data], { type: "application/vnd.ms-excel;charset=utf8" })
+        new Blob([data.data], { type: "application/vnd.ms-excel;charset=utf8" })
       );
       const link = document.createElement("a");
       link.style.display = "none";
@@ -441,7 +445,11 @@ const deleteRoleRow = async (id: string) => {
 };
 </script>
 <template>
-  <div class="body" :class="{ left: isCollapse }">
+  <div
+    class="body"
+    :class="{ left: isCollapse }"
+    style="transition: all 0.3s; z-index: 9; overflow: hidden"
+  >
     <div class="main">
       <div class="query" v-if="showQuery">
         <el-form
@@ -560,7 +568,6 @@ const deleteRoleRow = async (id: string) => {
           >
             <el-table-column type="selection" width="55" />
             <el-table-column
-              fixed
               prop="name"
               label="名称"
               width="150"
@@ -569,7 +576,7 @@ const deleteRoleRow = async (id: string) => {
             <el-table-column
               prop="dataScope"
               label="数据权限"
-              width="120"
+              width="150"
               align="center"
             />
             <el-table-column
@@ -591,15 +598,22 @@ const deleteRoleRow = async (id: string) => {
               width="250"
               align="center"
             />
-            <el-table-column label="操作" min-width="100" align="center">
+            <el-table-column
+              fixed="right"
+              label="操作"
+              min-width="120"
+              align="center"
+            >
               <template #default="{ row }">
                 <el-button
+                  link
                   type="warning"
                   :icon="Edit"
                   circle
                   @click="updateRoleRow(row)"
                 />
                 <el-button
+                  link
                   type="danger"
                   :icon="Delete"
                   circle
@@ -643,7 +657,7 @@ const deleteRoleRow = async (id: string) => {
           <div class="menu">
             <el-tree
               ref="treeRef"
-              style="max-width: 600px; padding: 10px 20px; color: #000"
+              style="max-width: 600px; padding: 10px 20px"
               :data="menuData"
               show-checkbox
               draggable
@@ -812,6 +826,7 @@ const deleteRoleRow = async (id: string) => {
   width: calc(100% - 199px);
   padding: 26px 32px;
   .main {
+    width: 100%;
     display: flex;
     flex-direction: column;
     .query {
@@ -861,9 +876,11 @@ const deleteRoleRow = async (id: string) => {
       }
     }
     .role {
+      width: 100%;
       margin-top: 30px;
       display: flex;
       .table {
+        width: 100%;
         flex: 3;
         .list {
           box-sizing: border-box;
@@ -875,10 +892,11 @@ const deleteRoleRow = async (id: string) => {
           padding-left: 20px;
           font-size: 16px;
           font-weight: 700;
-          color: #303133;
+          // color: #303133;
         }
       }
       .assignment-role {
+        width: 100%;
         margin-left: 20px;
         flex: 1;
         border: 1px solid #ebeef5;
@@ -894,7 +912,7 @@ const deleteRoleRow = async (id: string) => {
           padding: 0 20px;
           font-size: 16px;
           font-weight: 700;
-          color: #303133;
+          // color: #303133;
         }
       }
     }
