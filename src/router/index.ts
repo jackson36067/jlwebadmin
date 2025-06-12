@@ -30,7 +30,7 @@ router.beforeEach(async (to, from, next) => {
         try {
           // 防止刷新页面后路由失效,页面丢失
           // 1. 获取用户信息和菜单数据
-          const menuData = await loginStore.getMenuData(); // 从后端获取菜单数据
+          const menuData = loginStore.getMenuData(); // 从后端获取菜单数据
 
           // 2. 初始化动态路由
           await initRoutes(menuData);

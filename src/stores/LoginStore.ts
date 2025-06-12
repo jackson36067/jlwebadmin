@@ -6,6 +6,7 @@ interface loginParams {
   username: string;
   password: string;
   code: string;
+  isAdmin: boolean;
 }
 export const useLoginStore = defineStore(
   "user",
@@ -22,8 +23,13 @@ export const useLoginStore = defineStore(
       deptName: "",
       gender: "",
     });
-    const doUserLogin = async ({ username, password, code }: loginParams) => {
-      const res = await LoginAPI({ username, password, code });
+    const doUserLogin = async ({
+      username,
+      password,
+      code,
+      isAdmin,
+    }: loginParams) => {
+      const res = await LoginAPI({ username, password, code, isAdmin });
       userInfo.value = res.data;
     };
     const clearLoginData = () => {

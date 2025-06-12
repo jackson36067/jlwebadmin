@@ -64,7 +64,23 @@ export const useTagsStore = defineStore(
       }
     };
 
-    return { visitedViews, addView, deleteView };
+    // 初始化时添加当前路由到标签页
+    const breadcrumbStore = useBreadcrumbStore();
+    const clearTags = () => {
+      visitedViews.value = [
+        {
+          path: "/",
+          subtitle: "首页",
+          name: "home",
+          title: "",
+        },
+      ];
+      defaultActiveMenuStore.menuActive = "/";
+      breadcrumbStore.updateBreadcrumbs([{ title: "" }]);
+      router.push("/login");
+    };
+
+    return { visitedViews, addView, deleteView, clearTags };
   },
   {
     persist: true,

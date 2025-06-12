@@ -69,6 +69,7 @@ onBeforeUnmount(() => {
   document.removeEventListener("fullscreenchange", onFullscreenChange);
 });
 // 退出登录
+const tagStore = useTagsStore();
 const logout = async () => {
   ElMessageBox.confirm("你确认要退出吗", "Warning", {
     confirmButtonText: "确定",
@@ -81,6 +82,8 @@ const logout = async () => {
       // 清空用户存储
       const LoginStore = useLoginStore();
       LoginStore.clearLoginData();
+      // 清空菜单存储
+      tagStore.clearTags();
       // 将页面跳转至登录页
       router.push("/login");
       ElMessage({
@@ -159,7 +162,6 @@ const fetchSuggestions = (inputValue: string, callback) => {
 };
 
 // 跳转到对应路径
-const tagStore = useTagsStore();
 const defaultActiveMenu = useDefaultActiveMenuStore();
 const handleSelect = (item) => {
   // console.log("选中菜单:", item);

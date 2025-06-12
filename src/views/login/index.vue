@@ -28,18 +28,26 @@ const loginStore = useLoginStore();
 const loading = ref(false);
 
 const defaultActiveMenuStore = useDefaultActiveMenuStore();
+const isAdmin = ref("1"); // 默认选中 Option 1
 
 // 登录函数
 const login = async () => {
   const { username, password, code } = loginForm.value;
   // 发起请求
-  await loginStore.doUserLogin({ username, password, code }).catch((error) => {
-    // 如果登录出现错误刷新验证码
-    getCode();
-    // 清空验证码栏
-    loginForm.value.code = "";
-    return Promise.reject(error);
-  });
+  await loginStore
+    .doUserLogin({
+      username: username,
+      password: password,
+      code: code,
+      isAdmin: isAdmin.value === "1" ? true : false,
+    })
+    .catch((error) => {
+      // 如果登录出现错误刷新验证码
+      getCode();
+      // 清空验证码栏
+      loginForm.value.code = "";
+      return Promise.reject(error);
+    });
   // 提示登录成功
   ElMessage({ type: "success", message: "登录成功" });
   // 动态加载路由
@@ -134,6 +142,13 @@ onMounted(() => {
       <!-- <el-checkbox v-model="loginForm.rememberMe" style="margin: 0 0 25px 0">
         记住我
       </el-checkbox> -->
+      <!-- 添加单选框, 选择身份 -->
+      <div class="mb-2 ml-4">
+        <el-radio-group v-model="isAdmin">
+          <el-radio value="1" size="large">管理员</el-radio>
+          <el-radio value="0" size="large">普通用户</el-radio>
+        </el-radio-group>
+      </div>
       <el-form-item style="width: 100%">
         <el-button
           :loading="loading"

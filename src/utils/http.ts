@@ -5,7 +5,7 @@ import { ElMessage } from "element-plus";
 import "element-plus/theme-chalk/el-message.css";
 import { ref } from "vue";
 const httpInstance = axios.create({
-  baseURL: "http://localhost:8080/admin/",
+  baseURL: "http://localhost:8081/admin/",
   timeout: 5000,
 });
 // 验证码
